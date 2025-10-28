@@ -1,15 +1,9 @@
-# Created by venv; see https://docs.python.org/3/library/venv.html
 # Python
 __pycache__/
 *.pyc
 
 # Virtual environment
-/realitycheck/
-.env/
 .venv/
-Scripts/
-Lib/
-Include/
 
 # VS Code
 .vscode/
@@ -21,4 +15,3 @@ Include/
 # OS files
 .DS_Store
 Thumbs.db
-
