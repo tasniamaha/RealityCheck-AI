@@ -1,0 +1,28 @@
+.empty-state {
+  text-align: center;
+  padding: var(--spacing-2xl);
+  color: var(--color-text-muted);
+}
+
+.empty-state-icon {
+  font-size: 48px;
+  margin-bottom: var(--spacing-lg);
+  opacity: 0.5;
+}
+
+.empty-state-title {
+  font-size: var(--font-size-xl);
+  font-weight: 600;
+  color: var(--color-text-primary);
+  margin-bottom: var(--spacing-sm);
+}
+
+.empty-state-message {
+  max-width: 400px;
+  margin: 0 auto var(--spacing-lg);
+  line-height: 1.6;
+}
+
+.empty-state-action {
+  margin-top: var(--spacing-lg);
+}
