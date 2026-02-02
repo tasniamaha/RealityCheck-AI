@@ -1,0 +1,63 @@
+.app-layout {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  background: var(--bg-primary);
+  position: relative;
+}
+
+.main-content {
+  flex: 1;
+  padding-top: 80px; /* Account for fixed navbar */
+  width: 100%;
+  position: relative;
+  z-index: 1;
+}
+
+.page-container {
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 0 var(--spacing-lg);
+  width: 100%;
+}
+
+/* Ensure content doesn't shift when sidebar opens */
+body {
+  overflow-x: hidden;
+}
+
+/* Desktop sidebar permanently visible */
+@media (min-width: 1024px) {
+  .main-content {
+    padding-left: 0; /* Remove left padding since sidebar is overlay */
+  }
+}
+
+/* Ensure content doesn't get covered by navbar */
+@media (max-width: 768px) {
+  .main-content {
+    padding-top: 70px;
+  }
+
+  .page-container {
+    padding: 0 var(--spacing-md);
+  }
+}
+
+.main-container {
+    display: flex;
+    min-height: 100vh;
+}
+
+.sidebar {
+    width: 250px; /* Fixed width */
+    height: 100vh;
+    overflow-y: auto;
+    position: sticky;
+    top: 0;
+}
+
+.content-area {
+    flex: 1;
+    overflow: auto;
+}

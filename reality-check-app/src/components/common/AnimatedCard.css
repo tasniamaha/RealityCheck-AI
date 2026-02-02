@@ -1,0 +1,86 @@
+.animated-card {
+  position: relative;
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-lg);
+  padding: var(--spacing-lg);
+  overflow: hidden;
+  transition: all var(--transition-base);
+}
+
+.card-content {
+  position: relative;
+  z-index: 2;
+}
+
+.card-glow {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: var(--gradient-triple);
+  opacity: 0;
+  transition: opacity var(--transition-base);
+  z-index: 1;
+  filter: blur(20px);
+}
+
+/* Triple gradient hover effect */
+.card-hover-triple:hover {
+  border-color: transparent;
+  background: linear-gradient(
+    135deg,
+    rgba(139, 92, 246, 0.1),
+    rgba(16, 185, 129, 0.05),
+    rgba(30, 64, 175, 0.05)
+  );
+}
+
+.card-hover-triple:hover .card-glow {
+  opacity: 0.2;
+}
+
+.card-hover-triple::before {
+  content: '';
+  position: absolute;
+  top: -2px;
+  left: -2px;
+  right: -2px;
+  bottom: -2px;
+  background: var(--gradient-triple);
+  border-radius: calc(var(--radius-lg) + 2px);
+  z-index: -1;
+  opacity: 0;
+  transition: opacity var(--transition-base);
+}
+
+.card-hover-triple:hover::before {
+  opacity: 1;
+}
+
+/* Glass hover effect */
+.card-hover-glass {
+  background: var(--glass-bg);
+  backdrop-filter: blur(10px);
+}
+
+.card-hover-glass:hover {
+  backdrop-filter: blur(20px);
+  background: linear-gradient(
+    135deg,
+    rgba(139, 92, 246, 0.15),
+    rgba(16, 185, 129, 0.1),
+    rgba(30, 64, 175, 0.1)
+  );
+  border-color: rgba(255, 255, 255, 0.2);
+}
+
+/* Float hover effect */
+.card-hover-float:hover {
+  animation: float 2s ease-in-out infinite;
+  box-shadow:
+    0 20px 40px rgba(139, 92, 246, 0.2),
+    0 10px 20px rgba(16, 185, 129, 0.1),
+    0 5px 10px rgba(30, 64, 175, 0.1);
+}

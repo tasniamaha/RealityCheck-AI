@@ -1,0 +1,219 @@
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem;
+  font-weight: 600;
+  text-decoration: none;
+  border: 2px solid transparent;
+  border-radius: var(--radius-lg);
+  cursor: pointer;
+  transition: all var(--transition-base);
+  font-family: inherit;
+  line-height: 1.5;
+  position: relative;
+  overflow: hidden;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  font-size: 0.9em;
+}
+
+.btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none !important;
+}
+
+/* Sizes */
+.btn-small {
+  padding: 0.625rem 1.25rem;
+  font-size: var(--font-sm);
+  border-radius: var(--radius-md);
+}
+
+.btn-medium {
+  padding: 0.875rem 1.75rem;
+  font-size: var(--font-base);
+}
+
+.btn-large {
+  padding: 1.125rem 2.25rem;
+  font-size: var(--font-lg);
+}
+
+/* Triple Gradient Variant */
+.btn-triple-gradient {
+  background: linear-gradient(
+    45deg,
+    var(--accent-purple),
+    var(--accent-emerald),
+    var(--accent-navy)
+  );
+  background-size: 200% 200%;
+  color: white;
+  border: none;
+  animation: gradient-shift 3s ease infinite;
+  position: relative;
+}
+
+.btn-triple-gradient::before {
+  content: '';
+  position: absolute;
+  top: 1px;
+  left: 1px;
+  right: 1px;
+  bottom: 1px;
+  background: var(--bg-primary);
+  border-radius: calc(var(--radius-lg) - 1px);
+  z-index: 0;
+  opacity: 0;
+  transition: opacity var(--transition-base);
+}
+
+.btn-triple-gradient:hover::before {
+  opacity: 0.1;
+}
+
+.btn-triple-gradient .btn-content {
+  position: relative;
+  z-index: 1;
+}
+
+.btn-triple-gradient:hover {
+  transform: translateY(-2px);
+  box-shadow:
+    0 10px 30px rgba(139, 92, 246, 0.3),
+    0 5px 15px rgba(16, 185, 129, 0.2),
+    0 2px 5px rgba(30, 64, 175, 0.2);
+}
+
+/* Hover Mix Variants */
+.btn-primary {
+  background: var(--accent-purple);
+  color: white;
+  border-color: var(--accent-purple);
+}
+
+.btn-primary:hover:not(:disabled) {
+  background: linear-gradient(
+    45deg,
+    var(--accent-purple-dark),
+    var(--accent-emerald),
+    var(--accent-navy)
+  );
+  border-color: transparent;
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-xl);
+}
+
+.btn-secondary {
+  background: var(--accent-emerald);
+  color: white;
+  border-color: var(--accent-emerald);
+}
+
+.btn-secondary:hover:not(:disabled) {
+  background: linear-gradient(
+    45deg,
+    var(--accent-emerald-dark),
+    var(--accent-navy),
+    var(--accent-purple)
+  );
+  border-color: transparent;
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-xl);
+}
+
+.btn-outline {
+  background: transparent;
+  color: var(--text-primary);
+  border-color: var(--border-color);
+}
+
+.btn-outline:hover:not(:disabled) {
+  background: linear-gradient(
+    45deg,
+    rgba(139, 92, 246, 0.1),
+    rgba(16, 185, 129, 0.1),
+    rgba(30, 64, 175, 0.1)
+  );
+  border-color: transparent;
+  color: white;
+  transform: translateY(-2px);
+}
+
+/* Glass Variant */
+.btn-glass {
+  background: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  color: white;
+}
+
+.btn-glass:hover:not(:disabled) {
+  background: linear-gradient(
+    45deg,
+    rgba(139, 92, 246, 0.2),
+    rgba(16, 185, 129, 0.2),
+    rgba(30, 64, 175, 0.2)
+  );
+  backdrop-filter: blur(20px);
+  transform: translateY(-2px);
+}
+
+/* Full width */
+.btn-full {
+  width: 100%;
+}
+
+/* Loading state */
+.btn-loading {
+  opacity: 0.8;
+  cursor: wait;
+}
+
+.btn-spinner {
+  width: 20px;
+  height: 20px;
+  border: 2px solid transparent;
+  border-top-color: currentColor;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  margin-left: 0.5rem;
+}
+
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+/* Icon and Arrow */
+.btn-icon {
+  font-size: 1.2em;
+}
+
+.btn-arrow {
+  transition: transform var(--transition-fast);
+}
+
+.btn:hover .btn-arrow {
+  transform: translateX(4px);
+}
+
+/* Special hover effects for all buttons */
+.btn::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: var(--gradient-triple);
+  opacity: 0;
+  z-index: -1;
+  transition: opacity var(--transition-base);
+}
+
+.btn:hover::after {
+  opacity: 0.1;
+}
