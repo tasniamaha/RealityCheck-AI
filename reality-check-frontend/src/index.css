@@ -1,0 +1,88 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+body {
+  background: radial-gradient(circle at center, #0a0a0a 0%, #000000 100%);
+  font-family: 'Inter', system-ui, sans-serif;
+}
+
+.glass {
+  background: rgba(15, 23, 42, 0.65);
+  border: 1px solid rgba(148, 163, 184, 0.15);
+  backdrop-filter: blur(16px);
+}
+
+.neon-border {
+  box-shadow: 0 0 15px -3px rgb(0 240 255 / 0.5),
+              0 0 6px -4px rgb(192 38 211 / 0.5);
+}
+
+.role-btn {
+  @apply px-8 py-3.5 glass rounded-2xl font-medium hover:bg-cyan-500/20 hover:text-cyan-300 transition-all border border-slate-700 hover:border-cyan-400;
+}
+
+
+
+.futuristic-btn {
+  @apply px-10 py-4 text-lg font-medium glass border border-slate-700 hover:border-cyan-400 rounded-2xl transition-all hover:bg-cyan-500/10 hover:text-cyan-300 tracking-wider;
+}
+
+.glass {
+  background: rgba(15, 23, 42, 0.75);
+  border: 1px solid rgba(148, 163, 184, 0.2);
+  backdrop-filter: blur(20px);
+}
+
+.neon-border {
+  box-shadow: 0 0 25px -5px rgb(34 211 238 / 0.4),
+              0 0 10px -5px rgb(192 38 211 / 0.3);
+}
+
+@keyframes grid {
+  0% { background-position: 0 0; }
+  100% { background-position: 50px 50px; }
+}
+
+.animate-grid {
+  animation: grid 15s linear infinite;
+}
+
+.input-field {
+  @apply w-full bg-slate-950 border border-slate-700 focus:border-cyan-400 rounded-2xl px-6 py-5 text-white placeholder-slate-500 focus:outline-none transition-all;
+}
+
+.btn-primary {
+  @apply py-5 bg-gradient-to-r from-cyan-500 to-purple-600 rounded-2xl font-semibold hover:brightness-110 transition-all;
+}
+
+.btn-secondary {
+  @apply py-5 border border-slate-600 hover:border-slate-400 rounded-2xl font-medium transition-all;
+}
+
+@keyframes grid {
+  0% { background-position: 0 0; }
+  100% { background-position: 60px 60px; }
+}
+.animate-grid {
+  animation: grid 20s linear infinite;
+}
+
+@keyframes twinkle {
+  0%, 100% { opacity: 0.3; }
+  50% { opacity: 0.9; }
+}
+
+@keyframes twinkle-slow {
+  0%, 100% { opacity: 0.2; }
+  50% { opacity: 0.7; }
+}
+
+@keyframes twinkle-slower {
+  0%, 100% { opacity: 0.1; }
+  50% { opacity: 0.5; }
+}
+
+.animate-twinkle { animation: twinkle 4s infinite alternate; }
+.animate-twinkle-slow { animation: twinkle-slow 7s infinite alternate; }
+.animate-twinkle-slower { animation: twinkle-slower 12s infinite alternate; }
