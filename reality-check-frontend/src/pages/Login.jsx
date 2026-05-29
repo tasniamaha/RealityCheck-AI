@@ -5,6 +5,7 @@ import { motion } from 'framer-motion';
 import { Shield, ArrowRight } from 'lucide-react';
 import ScrollToTopButton from '../components/ScrollToTopButton';
 import { Link } from 'react-router-dom';
+import logo from '../assets/logo/logo-removebg.png';
 
 export default function Login() {
   const [username,  setUsername]  = useState('');
@@ -62,19 +63,23 @@ export default function Login() {
       >
         <div className="flex justify-center mb-8">
           <div className="flex items-center gap-3">
-            <div className="relative">
-              <Shield className="w-14 h-14 text-cyan-400" />
-              <div className="absolute inset-0 bg-cyan-400/40 blur-xl rounded-full animate-pulse" />
-            </div>
-            <h1 className="text-5xl font-bold tracking-tighter">
-              REALITY<span className="text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 via-purple-400 to-pink-400">CHECK</span>
-            </h1>
+           <div className="flex items-center gap-4">
+  <img
+    src={logo}
+    alt="Reality Check Logo"
+    className="w-16 h-16 object-contain"
+  />
+
+  <h1 className="text-5xl font-bold tracking-tighter">
+    REALITY<span className="text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 via-purple-400 to-pink-400">CHECK</span>
+  </h1>
+</div>
           </div>
         </div>
 
         <div className="text-center mb-10">
-          <div className="inline-flex items-center gap-2 px-6 py-2 rounded-full bg-cyan-500/10 border border-cyan-400/30 mb-4">
-            <span className="text-sm font-mono tracking-[4px] text-cyan-400">NEURAL ACCESS PROTOCOL</span>
+          <div className="inline-flex items-center gap-2 px-6 py-2 rounded-full bg-cyan-500/10 mb-4">
+           
           </div>
           <h2 className="text-3xl font-semibold tracking-tight">Enter the System</h2>
         </div>
@@ -137,12 +142,7 @@ export default function Login() {
       Create an account
     </Link>
   </p>
-  <p className="text-slate-500 text-xs">
-    Want to be an expert?{' '}
-    <Link to="/expert-register" className="text-purple-400 hover:text-purple-300 underline">
-      Apply here
-    </Link>
-  </p>
+ 
 </div>
 
         <p className="text-center mt-8 text-slate-400 text-sm">

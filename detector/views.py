@@ -2,6 +2,7 @@ import os
 import tempfile
 import json
 import hashlib
+import urllib.request
 from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_POST, require_GET
@@ -665,3 +666,167 @@ def expert_review(request, scan_id):
     return render(request, 'detector/expert_review.html', {
         'scan': scan, 'is_video': is_video, 'expert': request.user,
     })
+
+# ── Claude API proxy: model voice generation ──────────────────────────────────
+@csrf_exempt
+@require_POST
+def api_model_voice(request):
+    """
+    Proxies a voice-generation request to the Anthropic API.
+    The image is loaded from disk via scan_id — no base64 in the request body,
+    which previously caused "Unexpected end of JSON input" on large files.
+
+    Accepts JSON (small, metadata-only):
+        { scan_id, model_name, short_name, verdict, fake_prob,
+          fake_signals, real_signals, specialty, other_models }
+    Returns JSON: { voice: "..." }
+    """
+    # ── 1. Parse the (small, metadata-only) request body ──────────────────────
+    try:
+        body = json.loads(request.body.decode("utf-8"))
+    except (json.JSONDecodeError, UnicodeDecodeError) as exc:
+        return _json({'error': f'Invalid JSON body: {exc}'}, status=400)
+
+    scan_id      = body.get('scan_id')
+    model_name   = body.get('model_name', 'Unknown Model')
+    short_name   = body.get('short_name', model_name)
+    verdict      = body.get('verdict', 'UNCERTAIN')
+    fake_prob    = body.get('fake_prob')
+    fake_signals = body.get('fake_signals', [])
+    real_signals = body.get('real_signals', [])
+    specialty    = body.get('specialty', 'image authenticity')
+    other_models = body.get('other_models', '')
+
+    fake_prob_str = f"{float(fake_prob):.1f}" if fake_prob is not None else "unknown"
+
+    # ── 2. Load the image from disk (backend already has it) ──────────────────
+    image_b64 = None
+    if scan_id:
+        try:
+            scan = ScanResult.objects.get(id=scan_id)
+            if scan.media_file and scan.media_type == 'image':
+                import base64, io
+                scan.media_file.open('rb')
+                raw = scan.media_file.read()
+                scan.media_file.close()
+
+                # Resize to max 1024px on longest side to keep payload reasonable
+                img = Image.open(io.BytesIO(raw)).convert('RGB')
+                img.thumbnail((1024, 1024), Image.LANCZOS)
+                buf = io.BytesIO()
+                img.save(buf, format='JPEG', quality=75)
+                image_b64 = base64.b64encode(buf.getvalue()).decode('utf-8')
+        except Exception:
+            image_b64 = None  # proceed without image — text-only prompt still works
+
+    # ── 3. Build the prompt ───────────────────────────────────────────────────
+    if verdict == 'FAKE':
+        verdict_instruction = (
+            f"3. Be specific about what is WRONG in this image: describe the exact visual "
+            f"problems you found — such as {', '.join(fake_signals[:2])}. "
+            f"Explain WHY these are signs of manipulation (e.g. real lighting casts coherent shadows, "
+            f"real cameras produce natural noise, real faces have consistent texture gradients)."
+        )
+    elif verdict == 'REAL':
+        verdict_instruction = (
+            f"3. Be specific about what makes this image authentic: describe the signals that "
+            f"confirm it — such as {', '.join(real_signals[:2])}. "
+            f"Explain WHY these prove authenticity (e.g. natural noise patterns, coherent depth-of-field, "
+            f"physically plausible lighting falloff)."
+        )
+    else:
+        verdict_instruction = (
+            "3. Explain the conflicting signals: what looks authentic AND what looks suspicious. "
+            "Name the specific visual or statistical tension that made you uncertain."
+        )
+
+    prompt = (
+        f"You are {short_name}, an AI deepfake detection model specializing in {specialty}.\n\n"
+        f"You just analyzed this image. Your output: verdict={verdict}, fake_probability={fake_prob_str}%.\n\n"
+        f"Speak in FIRST PERSON as the model itself. Be direct, forensic, and technically specific. "
+        f"Your tone is a confident expert reporting findings — not hedging, not generic.\n\n"
+        f"Write exactly 3 sentences:\n"
+        f"1. What specific visual or statistical signals you detected in THIS image "
+        f"(name concrete things: lighting direction, texture frequency, edge sharpness, shadow consistency, "
+        f"color histogram anomalies, semantic plausibility of the scene, pixel noise pattern, etc.).\n"
+        f"2. How these signals connect to your verdict — why they indicate "
+        f"{'manipulation/generation' if verdict == 'FAKE' else 'authenticity' if verdict == 'REAL' else 'ambiguity'}.\n"
+        f"{verdict_instruction}\n\n"
+        f"Other models scored: {other_models}. In your third sentence, briefly say whether you agree "
+        f"or disagree and why.\n\n"
+        f"RULES: No bullet points. No preamble like 'I analyzed...' — start with your finding. "
+        f"Be blunt. Name real visual phenomena you see. Never say 'I cannot see the image'."
+    )
+
+    # ── 4. Build Anthropic message (attach image only if we got one) ──────────
+    user_content = []
+    if image_b64:
+        user_content.append({
+            "type": "image",
+            "source": {"type": "base64", "media_type": "image/jpeg", "data": image_b64}
+        })
+    user_content.append({"type": "text", "text": prompt})
+
+    anthropic_payload = json.dumps({
+        "model": "claude-sonnet-4-20250514",
+        "max_tokens": 300,
+        "messages": [{"role": "user", "content": user_content}]
+    }).encode("utf-8")
+
+    # ── 5. Call Anthropic (or fall back to deterministic voice) ───────────────
+    api_key = os.environ.get("ANTHROPIC_API_KEY", "")
+
+    if not api_key:
+        # Deterministic fallback — still returns a real, specific sentence
+        sig0 = fake_signals[0] if fake_signals else 'statistical anomalies'
+        sig1 = fake_signals[1] if len(fake_signals) > 1 else 'inconsistent pixel patterns'
+        rs0  = real_signals[0] if real_signals else 'natural signal distribution'
+        rs1  = real_signals[1] if len(real_signals) > 1 else 'consistent pixel statistics'
+        agree = 'agrees' if verdict in other_models else 'differs — but my signal confidence is high'
+        other_first = other_models.split(',')[0].strip() if other_models else 'peer models'
+
+        if verdict == 'FAKE':
+            voice = (
+                f"My {specialty} pipeline flagged this image based on {sig0} and {sig1}, "
+                f"both of which are characteristic fingerprints of synthetically generated or manipulated media. "
+                f"At {fake_prob_str}% fake probability this is a clear positive — {other_first} {agree}."
+            )
+        elif verdict == 'REAL':
+            voice = (
+                f"Across my {specialty} analysis, this image exhibits {rs0} and {rs1}, "
+                f"both consistent with genuine camera capture rather than neural generation. "
+                f"A {fake_prob_str}% fake probability confirms authenticity — {other_first} {agree}."
+            )
+        else:
+            voice = (
+                f"My {specialty} detects competing signals: {sig0} points toward manipulation, "
+                f"while {rs0} aligns with authentic capture, creating genuine ambiguity. "
+                f"At {fake_prob_str}% I cannot commit — expert human review is the correct next step."
+            )
+        return _json({"voice": voice})
+
+    req = urllib.request.Request(
+        "https://api.anthropic.com/v1/messages",
+        data=anthropic_payload,
+        headers={
+            "Content-Type": "application/json",
+            "x-api-key": api_key,
+            "anthropic-version": "2023-06-01",
+        },
+        method="POST",
+    )
+
+    try:
+        with urllib.request.urlopen(req, timeout=30) as resp:
+            resp_data = json.loads(resp.read().decode("utf-8"))
+        voice = "".join(
+            block["text"]
+            for block in resp_data.get("content", [])
+            if block.get("type") == "text"
+        )
+        return _json({"voice": voice.strip() or "Analysis complete."})
+    except urllib.error.HTTPError as exc:
+        err_body = exc.read().decode("utf-8", errors="replace")
+        return _json({"error": f"Anthropic API error {exc.code}: {err_body}"}, status=502)
+    except Exception as exc:
+        return _json({"error": str(exc)}, status=502)

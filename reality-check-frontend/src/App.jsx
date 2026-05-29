@@ -10,6 +10,7 @@ import ExpertRegister   from './pages/ExpertRegister';
 import ExpertDashboard  from './pages/ExpertDashboard';
 import AdminDashboard   from './pages/AdminDashboard';
 import Methodology      from './pages/Methodology';
+import ResearchPapers  from './pages/ResearchPapers';
 
 const ProtectedRoute = ({ children, allowedRoles }) => {
   const { user, loading } = useAuth();
@@ -40,6 +41,7 @@ function App() {
             <Route path="/register"        element={<Register />} />
             <Route path="/expert-register" element={<ExpertRegister />} />
             <Route path="/methodology"     element={<Methodology />} />
+            <Route path="/research-papers" element={<ResearchPapers />} />
 
             <Route path="/user-dashboard" element={
               <ProtectedRoute allowedRoles={['user', 'expert', 'admin']}>

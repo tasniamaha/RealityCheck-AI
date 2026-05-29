@@ -27,4 +27,7 @@ urlpatterns = [
     path('api/admin/applications/',           views.api_admin_applications,        name='api_admin_applications'),
     path('api/admin/applications/<int:app_id>/action/', views.api_admin_application_action, name='api_admin_application_action'),
     path('api/admin/scans/',                  views.api_admin_scans,               name='api_admin_scans'),
+
+    # ── Claude proxy: model voice generation ─────────────────────────────────
+    path('api/model-voice/',                  views.api_model_voice,               name='api_model_voice'),
 ]

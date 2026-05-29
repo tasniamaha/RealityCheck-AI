@@ -154,8 +154,7 @@ export default function Register() {
             <UserPlus size={14} className="text-cyan-400" />
             <span className="text-xs font-mono tracking-[3px] text-cyan-400">CREATE ACCOUNT</span>
           </div>
-          <h2 className="text-2xl font-semibold tracking-tight">Join the Network</h2>
-          <p className="text-slate-400 text-sm mt-1">Upload media and get AI-powered deepfake analysis</p>
+         
         </div>
 
         {/* Global error */}
