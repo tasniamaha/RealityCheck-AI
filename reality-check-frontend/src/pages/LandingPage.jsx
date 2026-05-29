@@ -6,6 +6,9 @@ import { useState, useEffect } from 'react';
 
 import heroImage1 from '../assets/Include_image.jpg';
 import heroImage2 from '../assets/include_2.jpg';
+
+import heroImage3 from '../assets/hero_3.png';
+import heroImage4 from '../assets/hero4.jpg';
 import Navbar from '../components/Navbar';
 
 export default function LandingPage() {
@@ -13,7 +16,7 @@ export default function LandingPage() {
   const { login } = useAuth();
   const [currentImage, setCurrentImage] = useState(0);
 
-  const images = [heroImage1, heroImage2];
+ const images = [heroImage1, heroImage2, heroImage3, heroImage4];
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -88,48 +91,52 @@ export default function LandingPage() {
           </motion.div>
 
           {/* Cross-fade – top-right */}
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ duration: 2, delay: 0.6 }}
-            className="absolute top-0 right-0 w-[45%] h-[40%]"
-          >
-            <AnimatePresence mode="wait">
-              <motion.img
-                key={currentImage}
-                src={images[currentImage]}
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 0.55 }}
-                exit={{ opacity: 0 }}
-                transition={{ duration: 1.5 }}
-                className="w-full h-full object-cover grayscale"
-                alt=""
-              />
-            </AnimatePresence>
-            <div className="absolute inset-0 bg-gradient-to-bl from-black/20 to-black/70" />
-          </motion.div>
+         {/* Cross-fade – top-right */}
+<motion.div
+  initial={{ opacity: 0 }}
+  animate={{ opacity: 1 }}
+  transition={{ duration: 2, delay: 0.6 }}
+  className="absolute top-0 right-0 w-[45%] h-[40%]"
+>
+  <AnimatePresence mode="wait">
+    <motion.img
+      key={currentImage}
+      src={images[currentImage]}
+      initial={{ opacity: 0, scale: 1.05 }}
+      animate={{ opacity: 0.55, scale: 1 }}
+      exit={{ opacity: 0 }}
+      transition={{ duration: 1.5 }}
+      className="w-full h-full object-cover grayscale contrast-125 brightness-75"
+      alt=""
+    />
+  </AnimatePresence>
+
+  <div className="absolute inset-0 bg-gradient-to-bl from-black/20 via-black/30 to-black/80" />
+</motion.div>
 
           {/* Cross-fade – bottom-left */}
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ duration: 2, delay: 0.9 }}
-            className="absolute bottom-0 left-0 w-[45%] h-[40%]"
-          >
-            <AnimatePresence mode="wait">
-              <motion.img
-                key={(currentImage + 1) % images.length}
-                src={images[(currentImage + 1) % images.length]}
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 0.45 }}
-                exit={{ opacity: 0 }}
-                transition={{ duration: 1.5 }}
-                className="w-full h-full object-cover grayscale"
-                alt=""
-              />
-            </AnimatePresence>
-            <div className="absolute inset-0 bg-gradient-to-tr from-black/20 to-black/70" />
-          </motion.div>
+    \
+<motion.div
+  initial={{ opacity: 0 }}
+  animate={{ opacity: 1 }}
+  transition={{ duration: 2, delay: 0.9 }}
+  className="absolute bottom-0 left-0 w-[45%] h-[40%]"
+>
+  <AnimatePresence mode="wait">
+    <motion.img
+      key={(currentImage + 1) % images.length}
+      src={images[(currentImage + 1) % images.length]}
+      initial={{ opacity: 0, scale: 1.05 }}
+      animate={{ opacity: 0.45, scale: 1 }}
+      exit={{ opacity: 0 }}
+      transition={{ duration: 1.5 }}
+      className="w-full h-full object-cover grayscale contrast-125 brightness-50"
+      alt=""
+    />
+  </AnimatePresence>
+
+  <div className="absolute inset-0 bg-gradient-to-tr from-black/20 via-black/30 to-black/80" />
+</motion.div>
 
           {/* Central vignette */}
           <div className="absolute inset-0 bg-[radial-gradient(ellipse_60%_60%_at_50%_50%,rgba(0,0,0,0.75)_0%,transparent_100%)]" />
