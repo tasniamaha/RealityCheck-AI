@@ -26,7 +26,6 @@ const DEMO_SCENARIOS = [
       signals: [
         { label: 'Lighting consistency',    score: 97, ok: true  },
         { label: 'Facial micro-expressions', score: 93, ok: true  },
-        { label: 'Audio-lip sync',           score: 95, ok: true  },
         { label: 'Pixel-level artifacts',    score: 4,  ok: true  },
       ],
       summary: 'All three models agree this content shows no signs of manipulation. Lighting, facial geometry and audio synchronisation are consistent with authentic capture.',
@@ -43,9 +42,8 @@ const DEMO_SCENARIOS = [
       confidence: 87,
       verdictColor: '#f87171',
       signals: [
-        { label: 'Lighting consistency',    score: 38, ok: false },
+        { label: 'Wrong muscle movements',    score: 38, ok: false },
         { label: 'Facial micro-expressions', score: 29, ok: false },
-        { label: 'Audio-lip sync',           score: 44, ok: false },
         { label: 'Pixel-level artifacts',    score: 82, ok: false },
       ],
       summary: 'Strong GAN fingerprints detected around the facial boundary. Lighting direction is inconsistent with the background scene, and lip-sync lag of ~120 ms detected.',
@@ -293,9 +291,7 @@ export default function DemoPage() {
                 >
                   Run Demo →
                 </button>
-                <p style={{ marginTop: '12px', fontSize: '12px', color: '#334155', letterSpacing: '0.04em' }}>
-                  Takes ~4 seconds · No files uploaded · No account needed
-                </p>
+                
               </motion.div>
             </motion.div>
           )}

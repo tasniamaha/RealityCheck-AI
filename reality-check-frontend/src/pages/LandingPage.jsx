@@ -224,7 +224,7 @@ export default function LandingPage() {
           <span style={{ color: '#22d3ee' }}>Maliha Mehnaj</span>
         </p>
         <p style={{ color: '#334155', fontSize: '13px' }}>
-          © 2026 Reality Check • Ethical AI Verification Platform • Innovation World Cup 2026
+          © 2026 Reality Check  • IWC 2026 and I3C 2026
         </p>
       </footer>
 

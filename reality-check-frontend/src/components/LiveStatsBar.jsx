@@ -1,12 +1,10 @@
 import { motion } from 'framer-motion';
 
 const STATS = [
-  { pulse: true,  text: 'Live: 247 scans in progress' },
-  { pulse: true,  text: 'Active Experts: 52 online' },
-  { pulse: false, text: 'Uptime: 99.99% this month' },
-  { pulse: true,  text: 'New Detection: Audio watermarking' },
+  { pulse: true,  text: 'Live: 24/7 scans in progress' },
+  { pulse: true,  text: 'Active Experts: 3 online' },
   { pulse: false, text: 'Models: SigLIP · Xception · EfficientNet' },
-  { pulse: true,  text: 'Accuracy: 98.7% across all media types' },
+  { pulse: true,  text: 'Accuracy: 87% across all media types' },
 ];
 
 const ITEMS = [...STATS, ...STATS];
@@ -33,12 +31,12 @@ export default function LiveStatsBar() {
               display: 'inline-flex',
               alignItems: 'center',
               gap: '6px',
-              fontSize: '11px',
-              color: '#64748b',
-              letterSpacing: '0.06em',
-              marginRight: '40px',
-              flexShrink: 0,
-              whiteSpace: 'nowrap',
+              fontSize: '14px',
+fontWeight: 700,
+color: '#e2e8f0',
+letterSpacing: '0.08em',
+marginRight: '70px',
+padding: '0 10px',
             }}
           >
             {item.pulse && (

@@ -7,24 +7,24 @@ const menuSections = [
   {
     label: 'Main',
     items: [
-      { name: 'Home',      path: '/',               icon: '🏠' },
-      { name: 'Dashboard', path: '/user-dashboard',  icon: '📊' },
-      { name: 'New Scan',  path: '/user-dashboard',  icon: '🔍', badge: 'Live' },
+      { name: 'Home',      path: '/',               icon: '' },
+      { name: 'Dashboard', path: '/user-dashboard',  icon: '' },
+      { name: 'New Scan',  path: '/user-dashboard',  icon: '', badge: 'Live' },
     ],
   },
   {
     label: 'Explore',
     items: [
-      { name: 'Demo',            path: '/demo',            icon: '🎮', badge: 'Free' },
-      { name: 'Methodology',     path: '/methodology',     icon: '🔬' },
-      { name: 'Research Papers', path: '/research-papers', icon: '📄' },
+      { name: 'Demo',            path: '/demo',            icon: '', badge: 'Free' },
+      { name: 'Methodology',     path: '/methodology',     icon: '' },
+      { name: 'Research Papers', path: '/research-papers', icon: '' },
     ],
   },
   {
     label: 'Review',
     items: [
-      { name: 'Expert Panel',  path: '/expert-dashboard', icon: '👨‍⚖️' },
-      { name: 'Admin Control', path: '/admin-dashboard',  icon: '🛡️' },
+      { name: 'Expert Panel',  path: '/expert-dashboard', icon: '' },
+      { name: 'Admin Control', path: '/admin-dashboard',  icon: '' },
     ],
   },
 ];
@@ -114,9 +114,7 @@ export default function Sidebar({ isOpen, onClose }) {
                   <div style={{ fontSize: '14px', fontWeight: 700, color: '#f1f5f9', letterSpacing: '-0.01em' }}>
                     REALITY<span style={{ color: '#22d3ee' }}>CHECK</span>
                   </div>
-                  <div style={{ fontSize: '10px', color: '#334155', letterSpacing: '0.12em', textTransform: 'uppercase' }}>
-                    Detection System
-                  </div>
+                  
                 </div>
               </div>
 
@@ -168,8 +166,8 @@ export default function Sidebar({ isOpen, onClose }) {
                           background: isActive ? 'rgba(34,211,238,0.07)' : 'transparent',
                           border: 'none',
                           borderLeft: `2px solid ${isActive ? '#22d3ee' : 'transparent'}`,
-                          color: isActive ? '#22d3ee' : '#475569',
-                          fontSize: '13px', fontWeight: isActive ? 600 : 400,
+                          color: isActive ? '#eaeaea' : '#475569',
+                          fontSize: '19px', fontWeight: isActive ? 700 : 500,
                           cursor: 'pointer', textAlign: 'left',
                           transition: 'all 0.15s', letterSpacing: '0.01em',
                         }}

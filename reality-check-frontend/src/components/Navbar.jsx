@@ -66,13 +66,7 @@ export default function Navbar({ onMenuClick }) {
         onMouseEnter={e => (e.currentTarget.style.opacity = '0.75')}
         onMouseLeave={e => (e.currentTarget.style.opacity = '1')}
       >
-        <span style={{
-          width: '36px', height: '36px', borderRadius: '8px',
-          background: 'rgba(34,211,238,0.15)',
-          border: '1px solid rgba(34,211,238,0.4)',
-          display: 'flex', alignItems: 'center', justifyContent: 'center',
-          fontSize: '11px', fontWeight: 800, color: '#22d3ee', flexShrink: 0,
-        }}>RC</span>
+       
         <span style={{
           fontSize: '20px', fontWeight: 800,
           letterSpacing: '-0.02em', color: '#fff', lineHeight: 1,
