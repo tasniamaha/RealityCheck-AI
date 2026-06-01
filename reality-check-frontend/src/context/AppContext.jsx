@@ -7,6 +7,7 @@ export const AppProvider = ({ children }) => {
   const [expertApplications, setExpertApplications] = useState([]);
   const [pendingCases,        setPendingCases]        = useState([]);
   const [reviewedCases,       setReviewedCases]       = useState([]);
+  const [complaints,          setComplaints]          = useState([]);
 
   // ── Expert Application (public submit) ────────────────────────────────────
   const addApplication = async (formData) => {
@@ -38,7 +39,6 @@ export const AppProvider = ({ children }) => {
     });
     const data = await res.json();
     if (!res.ok) throw new Error(data.error || 'Action failed');
-    // Refresh list
     setExpertApplications(prev =>
       prev.map(a => a.id === id ? { ...a, status: data.status } : a)
     );
@@ -49,15 +49,10 @@ export const AppProvider = ({ children }) => {
   const addNewCase = async (file) => {
     const form = new FormData();
     form.append('file', file);
-
-    const res  = await fetch('/detect/', {
-      method:      'POST',
-      credentials: 'include',
-      body:        form,
-    });
+    const res  = await fetch('/detect/', { method: 'POST', credentials: 'include', body: form });
     const data = await res.json();
     if (!res.ok) throw new Error(data.error || 'Detection failed');
-    return data;   // { scan_id, status, model_results, ensemble, ... }
+    return data;
   };
 
   // ── User: poll for final verdict ──────────────────────────────────────────
@@ -65,7 +60,43 @@ export const AppProvider = ({ children }) => {
     const res  = await fetch(`/scan/${scanId}/status/`, { credentials: 'include' });
     const data = await res.json();
     if (!res.ok) throw new Error(data.error || 'Poll failed');
-    return data;   // { status, final_verdict, final_confidence }
+    return data;
+  };
+
+  // ── User: file a complaint ────────────────────────────────────────────────
+  const submitComplaint = async (scanId, reason, details) => {
+    const res = await fetch('/api/complaints/', {
+      method:      'POST',
+      credentials: 'include',
+      headers:     { 'Content-Type': 'application/json' },
+      body:        JSON.stringify({ scan_id: scanId, reason, details }),
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || 'Complaint submission failed');
+    return data;
+  };
+
+  // ── Admin: load complaints ────────────────────────────────────────────────
+  const fetchComplaints = useCallback(async () => {
+    const res  = await fetch('/api/complaints/', { credentials: 'include' });
+    const data = await res.json();
+    if (res.ok) setComplaints(data.complaints || []);
+  }, []);
+
+  // ── Admin: resolve / dismiss complaint ───────────────────────────────────
+  const updateComplaint = async (id, action) => {
+    const res = await fetch(`/api/complaints/${id}/action/`, {
+      method:      'POST',
+      credentials: 'include',
+      headers:     { 'Content-Type': 'application/json' },
+      body:        JSON.stringify({ action }),
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || 'Action failed');
+    setComplaints(prev =>
+      prev.map(c => c.id === id ? { ...c, status: data.status } : c)
+    );
+    return data;
   };
 
   // ── Expert: load queue ────────────────────────────────────────────────────
@@ -88,7 +119,6 @@ export const AppProvider = ({ children }) => {
     });
     const data = await res.json();
     if (!res.ok) throw new Error(data.error || 'Review failed');
-    // Move case from pending → reviewed in local state
     setPendingCases(prev => prev.filter(c => c.id !== scanId));
     return data;
   };
@@ -98,11 +128,15 @@ export const AppProvider = ({ children }) => {
       expertApplications,
       pendingCases,
       reviewedCases,
+      complaints,
       addApplication,
       fetchApplications,
       updateApplication,
       addNewCase,
       pollScanStatus,
+      submitComplaint,
+      fetchComplaints,
+      updateComplaint,
       fetchExpertQueue,
       submitVerdict,
     }}>
