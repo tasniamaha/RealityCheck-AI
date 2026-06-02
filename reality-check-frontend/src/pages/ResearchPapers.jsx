@@ -53,14 +53,12 @@ export default function ResearchPapers() {
           transition={{ duration: 0.65 }}
           className="text-center mb-16"
         >
-          <p className="text-[10px] tracking-[0.4em] font-mono text-purple-400/70 mb-4 uppercase">
-            Academic Foundation
-          </p>
+          
           <h1 className="text-6xl md:text-7xl font-black tracking-tighter leading-none mb-5">
             Research{' '}
-            <span className="text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-cyan-400">
+           
               Papers
-            </span>
+           
           </h1>
           
         </motion.div>

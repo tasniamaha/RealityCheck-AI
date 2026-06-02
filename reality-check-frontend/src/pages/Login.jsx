@@ -71,7 +71,7 @@ export default function Login() {
   />
 
   <h1 className="text-5xl font-bold tracking-tighter">
-    REALITY<span className="text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 via-purple-400 to-pink-400">CHECK</span>
+    REALITY CHECK
   </h1>
 </div>
           </div>
@@ -103,7 +103,7 @@ export default function Login() {
         </div>
 
         <div className="mb-10">
-          <label className="block text-xs text-slate-400 mb-2 font-mono tracking-widest">AUTHENTICATION KEY</label>
+          <label className="block text-xs text-slate-400 mb-2 font-mono tracking-widest">PASSWORD</label>
           <input
             type="password"
             placeholder="••••••••"
@@ -119,7 +119,7 @@ export default function Login() {
           whileTap={{ scale: 0.96 }}
           onClick={handleLogin}
           disabled={isLoading}
-          className="w-full py-6 bg-gradient-to-r from-cyan-500 via-purple-600 to-pink-500 rounded-2xl font-bold text-xl flex items-center justify-center gap-3 relative overflow-hidden group disabled:opacity-70"
+          className="w-full py-6 bg-cyan-500 rounded-2xl font-bold text-xl flex items-center justify-center gap-3 relative overflow-hidden group disabled:opacity-70"
         >
           {isLoading ? (
             <span className="flex items-center gap-3">
@@ -128,7 +128,7 @@ export default function Login() {
             </span>
           ) : (
             <>
-              INITIALIZE ACCESS
+              LOGIN
               <ArrowRight className="group-hover:translate-x-3 transition-transform" />
             </>
           )}

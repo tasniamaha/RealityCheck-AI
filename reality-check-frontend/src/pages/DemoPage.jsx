@@ -15,7 +15,7 @@ const STEPS = [
 const DEMO_SCENARIOS = [
   {
     id: 'real',
-    icon: '✅',
+    icon: '',
     label: 'Authentic Content',
     tagline: 'Show a real, unmanipulated result',
     accentColor: '#22d3ee',
@@ -33,7 +33,7 @@ const DEMO_SCENARIOS = [
   },
   {
     id: 'deepfake',
-    icon: '🎭',
+    icon: '',
     label: 'Deepfake Detected',
     tagline: 'Show a manipulated / AI-generated result',
     accentColor: '#f87171',
@@ -51,7 +51,7 @@ const DEMO_SCENARIOS = [
   },
   {
     id: 'uncertain',
-    icon: '❓',
+    icon: '',
     label: 'Uncertain',
     tagline: 'Show an inconclusive, borderline result',
     accentColor: '#fbbf24',
@@ -181,11 +181,7 @@ export default function DemoPage() {
             lineHeight: 1.1,
             margin: '0 0 12px',
           }}>
-            Interactive <span style={{
-              background: 'linear-gradient(90deg,#22d3ee,#a855f7)',
-              WebkitBackgroundClip: 'text',
-              WebkitTextFillColor: 'transparent',
-            }}>Demo</span>
+            Interactive Demo
           </h1>
           <p style={{ color: '#64748b', fontSize: '15px', maxWidth: '440px', margin: '0 auto' }}>
             Choose a scenario and watch the full detection pipeline run in real time.

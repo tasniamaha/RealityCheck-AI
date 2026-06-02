@@ -81,7 +81,7 @@ export default function LandingPage() {
               style={{
                 position: 'absolute', borderRadius: '50%',
                 width: `${3 + (i % 4) * 2}px`, height: `${3 + (i % 4) * 2}px`,
-                background: i % 2 === 0 ? 'rgba(34,211,238,0.5)' : 'rgba(168,85,247,0.4)',
+                background: i % 2 === 0 ? 'rgba(242, 247, 248, 0.5)' : 'rgba(239, 234, 243, 0.4)',
                 left: `${(i * 43 + 5) % 94}%`, top: `${(i * 61 + 9) % 88}%`,
                 zIndex: 2, pointerEvents: 'none', filter: 'blur(0.4px)',
               }}
@@ -113,7 +113,7 @@ export default function LandingPage() {
           </motion.div>
 
           <motion.h1 initial={{ opacity: 0, y: 40 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.9, delay: 0.3 }}
-            style={{ fontSize: 'clamp(4rem, 9vw, 11rem)', fontWeight: 900, lineHeight: 1, letterSpacing: '-0.04em', marginBottom: '40px', userSelect: 'none', backgroundImage: 'linear-gradient(90deg, #22d3ee, #a5b4fc, #a855f7)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>
+            style={{ fontSize: 'clamp(4rem, 9vw, 11rem)', fontWeight: 900, lineHeight: 1, letterSpacing: '-0.04em', marginBottom: '40px', userSelect: 'none', backgroundImage: 'linear-gradient(90deg, #f1f8f9, #ecedf2, #e6e1ea)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>
             CHECK
           </motion.h1>
 
@@ -131,7 +131,7 @@ export default function LandingPage() {
                 display: 'flex', alignItems: 'center', gap: '10px',
                 padding: '16px 40px', borderRadius: '14px',
                 background: 'linear-gradient(135deg, rgba(34,211,238,0.15), rgba(168,85,247,0.15))',
-                border: '1px solid rgba(34,211,238,0.4)',
+                border: '1px solid rgba(236, 241, 242, 0.4)',
                 color: '#fff', fontSize: '15px', fontWeight: 700,
                 letterSpacing: '0.08em', textTransform: 'uppercase', cursor: 'pointer',
               }}>
@@ -142,8 +142,8 @@ export default function LandingPage() {
               style={{
                 padding: '16px 40px', borderRadius: '14px',
                 background: 'transparent',
-                border: '1px solid rgba(148,163,184,0.3)',
-                color: '#94a3b8', fontSize: '15px', fontWeight: 600,
+                border: '1px solid rgba(239, 241, 245, 0.3)',
+                color: '#f3f5f9', fontSize: '15px', fontWeight: 600,
                 letterSpacing: '0.08em', textTransform: 'uppercase', cursor: 'pointer',
               }}>
               Interactive Demo
@@ -204,7 +204,7 @@ export default function LandingPage() {
             style={{ display: 'flex', gap: '16px', justifyContent: 'center', flexWrap: 'wrap' }}>
             <motion.button whileHover={{ scale: 1.04 }} whileTap={{ scale: 0.97 }}
               onClick={() => navigate('/register')}
-              style={{ padding: '14px 36px', borderRadius: '14px', background: 'linear-gradient(135deg, #22d3ee, #a855f7)', border: 'none', color: '#000', fontSize: '14px', fontWeight: 700, letterSpacing: '0.06em', cursor: 'pointer' }}>
+              style={{ padding: '14px 36px', borderRadius: '14px', background: 'linear-gradient(135deg, #f2f9fa, #ffffff)', border: 'none', color: '#000', fontSize: '14px', fontWeight: 700, letterSpacing: '0.06em', cursor: 'pointer' }}>
               Create Free Account
             </motion.button>
             <motion.button whileHover={{ scale: 1.04 }} whileTap={{ scale: 0.97 }}

@@ -144,7 +144,7 @@ export default function Register() {
               <div className="absolute inset-0 bg-cyan-400/40 blur-xl rounded-full animate-pulse" />
             </div>
             <h1 className="text-4xl font-bold tracking-tighter">
-              REALITY<span className="text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 via-purple-400 to-pink-400">CHECK</span>
+              REALITY CHECK
             </h1>
           </div>
         </div>
@@ -152,7 +152,9 @@ export default function Register() {
         <div className="text-center mb-8">
           <div className="inline-flex items-center gap-2 px-5 py-2 rounded-full bg-cyan-500/10 border border-cyan-400/30 mb-3">
             <UserPlus size={14} className="text-cyan-400" />
-            <span className="text-xs font-mono tracking-[3px] text-cyan-400">CREATE ACCOUNT</span>
+            <span className="text-xs font-mono tracking-[3px] text-white">
+  CREATE ACCOUNT
+</span>
           </div>
          
         </div>
@@ -260,7 +262,7 @@ export default function Register() {
           whileTap={{ scale: 0.97 }}
           onClick={handleRegister}
           disabled={isLoading}
-          className="mt-8 w-full py-5 bg-gradient-to-r from-cyan-500 via-purple-600 to-pink-500 rounded-2xl font-bold text-lg flex items-center justify-center gap-3 relative overflow-hidden group disabled:opacity-60"
+          className="mt-8 w-full py-5 bg-cyan-500 rounded-2xl font-bold text-lg flex items-center justify-center gap-3 relative overflow-hidden group disabled:opacity-60"
         >
           {isLoading ? (
             <span className="flex items-center gap-3">

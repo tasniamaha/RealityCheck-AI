@@ -31,8 +31,8 @@ export default function DemoPreviewSection() {
             background: i % 3 === 0
               ? 'rgba(34,211,238,0.35)'
               : i % 3 === 1
-                ? 'rgba(168,85,247,0.3)'
-                : 'rgba(255,255,255,0.1)',
+                ? 'rgba(237, 235, 239, 0.3)'
+                : 'rgba(228, 215, 215, 0.1)',
             left:  `${(i * 37 + 11) % 95}%`,
             top:   `${(i * 53 + 7)  % 90}%`,
             pointerEvents: 'none',
@@ -70,14 +70,8 @@ export default function DemoPreviewSection() {
             lineHeight: 1.15,
           }}
         >
-          Interactive Detection{' '}
-          <span style={{
-            backgroundImage: 'linear-gradient(90deg, #22d3ee, #a855f7)',
-            WebkitBackgroundClip: 'text',
-            WebkitTextFillColor: 'transparent',
-          }}>
-            Demo
-          </span>
+          Interactive Detection Demo
+        
         </motion.h2>
 <br/>
 
@@ -97,8 +91,8 @@ export default function DemoPreviewSection() {
               transition={{ duration: 0.5, delay: i * 0.12 }}
               whileHover={{ y: -6, transition: { duration: 0.2 } }}
               style={{
-                background: 'rgba(15, 23, 42, 0.8)',
-                border: '1px solid rgba(34,211,238,0.18)',
+                background: 'rgba(234, 236, 242, 0.8)',
+                border: '1px solid rgba(227, 234, 235, 0.18)',
                 borderRadius: '20px',
                 padding: '28px 36px',
                 minWidth: '160px',
@@ -124,7 +118,7 @@ export default function DemoPreviewSection() {
                   style={{
                     position: 'absolute', inset: '8px',
                     borderRadius: '50%',
-                    border: '1px solid rgba(168,85,247,0.2)',
+                    border: '1px solid rgba(234, 230, 239, 0.2)',
                   }}
                   animate={{ rotate: -360 }}
                   transition={{ duration: 12, repeat: Infinity, ease: 'linear' }}
@@ -162,15 +156,15 @@ export default function DemoPreviewSection() {
             onClick={() => navigate('/demo')}
             style={{
               padding: '14px 32px',
-              background: 'linear-gradient(135deg, rgba(34,211,238,0.15), rgba(168,85,247,0.15))',
-              border: '1px solid rgba(34,211,238,0.4)',
+              background: 'linear-gradient(135deg, rgba(219, 229, 231, 0.15), rgba(222, 215, 228, 0.15))',
+              border: '1px solid rgba(236, 243, 244, 0.4)',
               borderRadius: '14px',
               color: '#fff', fontSize: '14px',
               fontWeight: 600, cursor: 'pointer',
               letterSpacing: '0.04em',
             }}
           >
-            Launch Interactive Demo
+         
           </motion.button>
           <motion.button
             whileHover={{ scale: 1.04 }}
