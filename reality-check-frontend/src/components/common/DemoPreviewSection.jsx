@@ -91,7 +91,7 @@ export default function DemoPreviewSection() {
               transition={{ duration: 0.5, delay: i * 0.12 }}
               whileHover={{ y: -6, transition: { duration: 0.2 } }}
               style={{
-                background: 'rgba(234, 236, 242, 0.8)',
+                background: 'rgba(2, 11, 36, 0.8)',
                 border: '1px solid rgba(227, 234, 235, 0.18)',
                 borderRadius: '20px',
                 padding: '28px 36px',
@@ -150,22 +150,9 @@ export default function DemoPreviewSection() {
           transition={{ duration: 0.5, delay: 0.3 }}
           style={{ display: 'flex', gap: '16px', justifyContent: 'center', flexWrap: 'wrap' }}
         >
-          <motion.button
-            whileHover={{ scale: 1.04 }}
-            whileTap={{ scale: 0.97 }}
-            onClick={() => navigate('/demo')}
-            style={{
-              padding: '14px 32px',
-              background: 'linear-gradient(135deg, rgba(219, 229, 231, 0.15), rgba(222, 215, 228, 0.15))',
-              border: '1px solid rgba(236, 243, 244, 0.4)',
-              borderRadius: '14px',
-              color: '#fff', fontSize: '14px',
-              fontWeight: 600, cursor: 'pointer',
-              letterSpacing: '0.04em',
-            }}
-          >
+       
          
-          </motion.button>
+        
           <motion.button
             whileHover={{ scale: 1.04 }}
             whileTap={{ scale: 0.97 }}

@@ -77,12 +77,7 @@ export default function Login() {
           </div>
         </div>
 
-        <div className="text-center mb-10">
-          <div className="inline-flex items-center gap-2 px-6 py-2 rounded-full bg-cyan-500/10 mb-4">
-           
-          </div>
-          <h2 className="text-3xl font-semibold tracking-tight">Enter the System</h2>
-        </div>
+     <br></br>
 
         {error && (
           <div className="mb-6 px-5 py-4 rounded-2xl bg-red-500/10 border border-red-500/30 text-red-400 text-sm text-center">
