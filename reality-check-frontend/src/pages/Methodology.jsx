@@ -52,7 +52,7 @@ export default function Methodology() {
             </span>
           </h1>
           <p className="text-slate-400 text-lg max-w-xl mx-auto leading-relaxed">
-            A six-stage forensic pipeline combining state-of-the-art deep learning with certified human oversight.
+            A six-stage forensic pipeline combining two deep learning detectors with human expert review.
           </p>
         </motion.div>
 

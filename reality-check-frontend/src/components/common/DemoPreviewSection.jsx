@@ -2,9 +2,9 @@ import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 
 const STATS = [
-  { value: '87%', label: 'Detection Accuracy' },
-  { value: '2.3s',  label: 'Average Analysis Time' },
-  { value: '89%', label: 'User Satisfaction' },
+  { value: '2',     label: 'Detection Models Per Upload' },
+  { value: 'Every', label: 'Result Goes To Expert Review' },
+  { value: 'Open',  label: 'Scores And Heatmaps Shown' },
 ];
 
 export default function DemoPreviewSection() {

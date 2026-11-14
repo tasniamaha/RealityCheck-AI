@@ -1,40 +1,19 @@
 """
 video_detector.py
 ------------------
-Extracts frames from a video, runs all 3 models on each frame,
-averages per-model scores, then computes ensemble.
+Extracts frames from a video, runs all 3 models on each frame (same code path
+as images), averages per-model scores, then computes the ensemble.
 """
 
 import cv2
-import torch
-import torch.nn.functional as F
 from PIL import Image
-from torchvision import transforms
 from typing import Dict, Any, List
 
-DEVICE     = 'cuda' if torch.cuda.is_available() else 'cpu'
+from detector.image_detector import (
+    MODEL_RUNNERS, compute_ensemble, _result, _unavailable,
+)
+
 FRAME_SKIP = 10   # analyze 1 in every 10 frames
-
-XCEPTION_TRANSFORM = transforms.Compose([
-    transforms.Resize((299, 299)),
-    transforms.ToTensor(),
-    transforms.Normalize([0.5, 0.5, 0.5], [0.5, 0.5, 0.5]),
-])
-
-EFFICIENTNET_TRANSFORM = transforms.Compose([
-    transforms.Resize((224, 224)),
-    transforms.ToTensor(),
-    transforms.Normalize(mean=[0.485, 0.456, 0.406],
-                         std=[0.229, 0.224, 0.225]),
-])
-
-
-def _verdict(fake_prob_pct: float) -> str:
-    if fake_prob_pct >= 50:
-        return 'FAKE'
-    elif fake_prob_pct >= 35:
-        return 'UNCERTAIN'
-    return 'REAL'
 
 
 def _extract_frames(video_path: str) -> List[Image.Image]:
@@ -51,75 +30,22 @@ def _extract_frames(video_path: str) -> List[Image.Image]:
     return frames
 
 
-def _run_siglip_on_frames(frames: List[Image.Image]) -> Dict[str, Any]:
-    from detector.model_registry import SIGLIP_MODEL, SIGLIP_PROCESSOR
-    if SIGLIP_MODEL is None:
-        return {'model_name': 'SigLIP (HuggingFace)', 'error': 'Model not loaded', 'verdict': 'ERROR', 'fake_prob': None}
+def _run_on_frames(name: str, runner, frames: List[Image.Image]) -> Dict[str, Any]:
+    """Average a model's fake probability over every frame it could score."""
+    probs, last = [], None
+    for frame in frames:
+        last = runner(frame)
+        if last.get('fake_prob') is not None:
+            probs.append(last['fake_prob'] / 100)
+        elif last.get('verdict') == 'ERROR':
+            break   # model not loaded - no point trying the other frames
 
-    fake_probs = []
-    for img in frames:
-        inputs = SIGLIP_PROCESSOR(images=img, return_tensors='pt')
-        with torch.no_grad():
-            logits = SIGLIP_MODEL(**inputs).logits
-        probs = F.softmax(logits, dim=1).squeeze().tolist()
-        fake_probs.append(probs[0])  # index 0 = fake
-
-    avg = (sum(fake_probs) / len(fake_probs)) if fake_probs else 0.5
-    fake_pct = round(avg * 100, 2)
-    return {
-        'model_name':      'SigLIP (HuggingFace)',
-        'fake_prob':       fake_pct,
-        'real_prob':       round((1 - avg) * 100, 2),
-        'frames_analyzed': len(fake_probs),
-        'verdict':         _verdict(fake_pct),
-    }
-
-
-def _run_xception_on_frames(frames: List[Image.Image]) -> Dict[str, Any]:
-    from detector.model_registry import XCEPTION_MODEL
-    if XCEPTION_MODEL is None:
-        return {'model_name': 'Xception-FaceForensics', 'error': 'Model not loaded', 'verdict': 'ERROR', 'fake_prob': None}
-
-    fake_probs = []
-    for img in frames:
-        tensor = XCEPTION_TRANSFORM(img).unsqueeze(0).to(DEVICE)
-        with torch.no_grad():
-            out = XCEPTION_MODEL(tensor)
-            fake_probs.append(torch.sigmoid(out).item())
-
-    avg = (sum(fake_probs) / len(fake_probs)) if fake_probs else 0.5
-    fake_pct = round(avg * 100, 2)
-    return {
-        'model_name':      'Xception-FaceForensics',
-        'fake_prob':       fake_pct,
-        'real_prob':       round((1 - avg) * 100, 2),
-        'frames_analyzed': len(fake_probs),
-        'verdict':         _verdict(fake_pct),
-    }
-
-
-def _run_efficientnet_on_frames(frames: List[Image.Image]) -> Dict[str, Any]:
-    from detector.model_registry import EFFICIENTNET_MODEL
-    if EFFICIENTNET_MODEL is None:
-        return {'model_name': 'EfficientNet-B0 (Custom)', 'error': 'Model not loaded', 'verdict': 'ERROR', 'fake_prob': None}
-
-    fake_probs = []
-    for img in frames:
-        tensor = EFFICIENTNET_TRANSFORM(img).unsqueeze(0).to(DEVICE)
-        with torch.no_grad():
-            out  = EFFICIENTNET_MODEL(tensor)
-            prob = torch.softmax(out, dim=1).squeeze().tolist()
-        fake_probs.append(prob[1])  # index 1 = fake
-
-    avg = (sum(fake_probs) / len(fake_probs)) if fake_probs else 0.5
-    fake_pct = round(avg * 100, 2)
-    return {
-        'model_name':      'EfficientNet-B0 (Custom)',
-        'fake_prob':       fake_pct,
-        'real_prob':       round((1 - avg) * 100, 2),
-        'frames_analyzed': len(fake_probs),
-        'verdict':         _verdict(fake_pct),
-    }
+    if not probs:
+        result = _unavailable(name, last['verdict'], last.get('error', 'No frames scored'))
+    else:
+        result = _result(name, sum(probs) / len(probs))
+    result['frames_analyzed'] = len(probs)
+    return result
 
 
 def analyze_video(video_path: str) -> Dict[str, Any]:
@@ -128,32 +54,17 @@ def analyze_video(video_path: str) -> Dict[str, Any]:
         return {'error': 'No frames could be extracted. Check the video file.'}
 
     model_results = []
-    for runner in [_run_siglip_on_frames, _run_xception_on_frames, _run_efficientnet_on_frames]:
+    for name, runner in MODEL_RUNNERS:
         try:
-            model_results.append(runner(frames))
+            model_results.append(_run_on_frames(name, runner, frames))
         except Exception as e:
-            model_results.append({
-                'model_name':      runner.__name__,
-                'error':           str(e),
-                'fake_prob':       None,
-                'verdict':         'ERROR',
-                'frames_analyzed': 0,
-            })
-
-    valid   = [r for r in model_results if r.get('fake_prob') is not None]
-    avg_fake = round(sum(r['fake_prob'] for r in valid) / len(valid), 2) if valid else None
-
-    ensemble = {
-        'model_name':  'Ensemble (Average)',
-        'fake_prob':   avg_fake,
-        'real_prob':   round(100 - avg_fake, 2) if avg_fake is not None else None,
-        'verdict':     _verdict(avg_fake) if avg_fake is not None else 'ERROR',
-        'models_used': len(valid),
-    }
+            result = _unavailable(name, 'ERROR', str(e))
+            result['frames_analyzed'] = 0
+            model_results.append(result)
 
     return {
-        'media_type':          'video',
-        'model_results':       model_results,
-        'ensemble':            ensemble,
+        'media_type':           'video',
+        'model_results':        model_results,
+        'ensemble':             compute_ensemble(model_results),
         'total_frames_sampled': len(frames),
     }

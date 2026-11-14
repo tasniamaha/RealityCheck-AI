@@ -52,30 +52,38 @@ class ScanResult(models.Model):
         return f"{self.file_name} [{self.status}] — {self.final_verdict}"
 
     def compute_final_verdict(self):
+        """
+        The expert decides. The models never outvote a person.
+
+        final_verdict    = the expert's verdict. One exception: a low-confidence
+                           expert (1-2 out of 5) who contradicts a clear model
+                           label gives UNCERTAIN, so the case can be looked at again.
+        final_confidence = how sure the result is (not a fake probability):
+                           expert confidence 1..5 -> 50..90, +5 when the models
+                           agree with the expert, -10 when they clearly disagree.
+        """
         review = self.expert_review
         if review is None:
             return
 
-        expert_map = {'FAKE': 100.0, 'REAL': 0.0, 'UNCERTAIN': 50.0}
-        expert_fake_prob = expert_map.get(review.verdict, 50.0)
+        from detector.image_detector import _verdict
+        model_label = None
+        if self.model_ensemble_prob is not None:
+            model_label = _verdict(self.model_ensemble_prob)
 
-        model_scores = [
-            s for s in [self.siglip_prob, self.xception_prob, self.efficientnet_prob]
-            if s is not None
-        ]
-        model_avg = sum(model_scores) / len(model_scores) if model_scores else 50.0
+        verdict    = review.verdict
+        confidence = {1: 50.0, 2: 60.0, 3: 70.0, 4: 80.0, 5: 90.0}.get(review.confidence, 70.0)
 
-        combined = round((expert_fake_prob * 0.50) + (model_avg * 0.50), 2)
-
-        if combined >= 55:
-            verdict = 'FAKE'
-        elif combined >= 40:
-            verdict = 'UNCERTAIN'
-        else:
-            verdict = 'REAL'
+        if verdict in ('FAKE', 'REAL') and model_label in ('FAKE', 'REAL'):
+            if model_label == verdict:
+                confidence += 5
+            else:
+                confidence -= 10
+                if review.confidence <= 2:
+                    verdict = 'UNCERTAIN'
 
         self.final_verdict    = verdict
-        self.final_confidence = combined
+        self.final_confidence = confidence
         self.status           = 'REVIEWED'
         self.save()
 

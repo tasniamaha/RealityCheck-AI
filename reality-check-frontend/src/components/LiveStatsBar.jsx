@@ -1,10 +1,10 @@
 import { motion } from 'framer-motion';
 
 const STATS = [
-  { pulse: true,  text: 'Live: 24/7 scans in progress' },
-  { pulse: true,  text: 'Active Experts: 3 online' },
-  { pulse: false, text: 'Models: SigLIP · Xception · EfficientNet' },
-  { pulse: true,  text: 'Accuracy: 87% across all media types' },
+  { pulse: true,  text: 'Every result is reviewed by a human expert' },
+  { pulse: false, text: 'Models: SigLIP + EfficientNet-B0' },
+  { pulse: false, text: 'Per-model scores and heatmaps shown' },
+  { pulse: false, text: 'AI scores are estimates, not proof' },
 ];
 
 const ITEMS = [...STATS, ...STATS];

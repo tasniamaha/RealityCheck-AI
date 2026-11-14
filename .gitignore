@@ -1,0 +1,9 @@
+__pycache__/
+*.pyc
+*.bak
+_backup/
+testset/
+eval_results.csv
+media/uploads/
+node_modules/
+dist/

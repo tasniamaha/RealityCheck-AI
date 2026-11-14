@@ -14,30 +14,17 @@ import ComplaintModal from '../components/ComplaintModal';
 const MODEL_PERSONAS = {
   'SigLIP (HuggingFace)': {
     shortName: 'SigLIP',
-    role: 'Vision-Language Contrastive Model',
+    role: 'Vision transformer, public real/fake checkpoint',
     color: 'violet',
     icon: '',
-    specialty: 'semantic coherence and visual-text alignment',
-    fakeSignals: ['semantic inconsistency between objects', 'unnatural object relationships in the scene', 'impossible scene compositions'],
-    realSignals: ['consistent scene semantics', 'plausible object placement', 'natural environmental context'],
-  },
-  'Xception-FaceForensics': {
-    shortName: 'Xception',
-    role: 'Face Forensics Specialist',
-    color: 'rose',
-    icon: '',
-    specialty: 'facial manipulation and splicing artifacts',
-    fakeSignals: ['boundary artifacts around facial regions', 'unnatural skin texture frequency response', 'lighting direction mismatch on the face'],
-    realSignals: ['consistent facial texture gradients', 'natural pore and skin structure', 'coherent lighting falloff across the face'],
+    specialty: 'vision transformer fine-tuned on real vs. fake images',
   },
   'EfficientNet-B0 (Custom)': {
     shortName: 'EfficientNet',
-    role: 'Generative Artifact Detector',
+    role: 'Convolutional network, custom-trained',
     color: 'amber',
     icon: '',
-    specialty: 'GAN/diffusion fingerprints and pixel statistics',
-    fakeSignals: ['frequency domain anomalies in pixel statistics', 'over-smoothed regions typical of neural generators', 'unrealistic shadow directionality'],
-    realSignals: ['natural pixel noise distribution', 'authentic grain structure and sensor noise', 'physically plausible lighting and shadows'],
+    specialty: 'convolutional network trained on real vs. fake images',
   },
 };
 
@@ -49,47 +36,23 @@ const COLOR_MAP = {
 };
 
 // ─── Call YOUR Django backend proxy ────────────────────────────────────────
-async function fetchModelVoice(modelResult, scanId, allResults) {
-  const persona = MODEL_PERSONAS[modelResult.model_name] || {
-    shortName: modelResult.model_name,
-    specialty: 'image authenticity analysis',
-    fakeSignals: ['visual anomalies', 'statistical inconsistencies'],
-    realSignals: ['natural signal distribution', 'consistent pixel statistics'],
-  };
-
-  const otherModels = allResults
-    .filter(r => r.model_name !== modelResult.model_name)
-    .map(r => `${r.model_name}: ${r.verdict} (${r.fake_prob?.toFixed(1)}% fake)`)
-    .join(', ');
-
-  const payload = {
-    scan_id:      scanId,
-    model_name:   modelResult.model_name,
-    short_name:   persona.shortName,
-    verdict:      modelResult.verdict,
-    fake_prob:    modelResult.fake_prob,
-    fake_signals: persona.fakeSignals,
-    real_signals: persona.realSignals,
-    specialty:    persona.specialty,
-    other_models: otherModels,
-  };
-
+async function fetchModelVoice(modelResult, scanId) {
   const res = await fetch('/api/model-voice/', {
     method:      'POST',
     credentials: 'include',
     headers:     { 'Content-Type': 'application/json' },
-    body:        JSON.stringify(payload),
+    body:        JSON.stringify({ scan_id: scanId, model_name: modelResult.model_name }),
   });
 
   let data;
   try {
     data = await res.json();
   } catch {
-    throw new Error(`Server error (status ${res.status}) — check Django logs`);
+    throw new Error(`Server error (status ${res.status}) - check Django logs`);
   }
 
-  if (!res.ok) throw new Error(data.error || `Voice API failed (${res.status})`);
-  return data.voice;
+  if (!res.ok) throw new Error(data.error || `Explanation failed (${res.status})`);
+  return data;   // { voice, heatmap }
 }
 
 // ─── Color/verdict helpers ─────────────────────────────────────────────────
@@ -164,30 +127,34 @@ function ModelVoiceCard({ res, voice, loading, error, index }) {
       <div className="rounded-2xl bg-black/40 border border-slate-800 p-4">
         <div className="flex items-center gap-2 mb-3">
           <MessageSquare size={12} className={c.text} />
-          <span className={`text-xs font-mono tracking-widest ${c.text}`}>{persona.shortName} ANALYSIS:</span>
+          <span className={`text-xs font-mono tracking-widest ${c.text}`}>{persona.shortName} SCORE DETAILS:</span>
           {loading && <TypingDots colorClass={c.dot} />}
         </div>
-        {loading && <p className="text-slate-500 text-sm italic">Generating forensic analysis...</p>}
-        {!loading && error && <p className="text-red-400/70 text-sm italic">⚠ {error}</p>}
+        {loading && <p className="text-slate-500 text-sm italic">Computing heatmap...</p>}
+        {!loading && error && <p className="text-red-400/70 text-sm italic">{error}</p>}
         {!loading && !error && voice && (
-          <motion.p
-            initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.6 }}
-            className="text-slate-200 text-sm leading-relaxed"
-          >
-            "{voice}"
-          </motion.p>
+          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.6 }}>
+            {voice.heatmap && (
+              <img
+                src={voice.heatmap}
+                alt={`Regions that influenced the ${persona.shortName} score`}
+                className="w-full max-h-64 object-contain rounded-xl border border-slate-800 mb-3 bg-black"
+              />
+            )}
+            <p className="text-slate-200 text-sm leading-relaxed">{voice.voice}</p>
+          </motion.div>
         )}
       </div>
 
       <div className="flex justify-end mt-3">
         {res.verdict === 'FAKE' && (
           <span className="flex items-center gap-1.5 text-xs text-red-400 bg-red-500/10 px-3 py-1 rounded-full border border-red-500/20">
-            <AlertTriangle size={11} /> Manipulation Detected
+            <AlertTriangle size={11} /> Scored likely fake
           </span>
         )}
         {res.verdict === 'REAL' && (
           <span className="flex items-center gap-1.5 text-xs text-emerald-400 bg-emerald-500/10 px-3 py-1 rounded-full border border-emerald-500/20">
-            <CheckCircle size={11} /> Authenticated
+            <CheckCircle size={11} /> Scored likely real
           </span>
         )}
         {res.verdict === 'UNCERTAIN' && (
@@ -400,10 +367,10 @@ export default function UserDashboard() {
                 {[
                   { icon: '📤', step: '01', title: 'Upload Media',           color: '#22d3ee', desc: 'Drop any image or video file into the terminal. Supported formats: JPG, PNG, MP4, MOV. Your file is sent securely to the analysis backend.' },
                   { icon: '⚙️', step: '02', title: 'Preprocessing',          color: '#a855f7', desc: 'Frames are extracted and normalised. For video, key frames are sampled at regular intervals to ensure comprehensive coverage.' },
-                  { icon: '🧠', step: '03', title: 'Multi-Model AI Analysis', color: '#a855f7', desc: 'Three specialist models run in parallel — SigLIP checks semantic coherence, Xception detects facial splicing, and EfficientNet hunts GAN/diffusion fingerprints.' },
-                  { icon: '📊', step: '04', title: 'Cross-Validation',        color: '#10b981', desc: 'Model verdicts are weighted and cross-referenced. Disagreements between models flag edge cases for deeper scrutiny.' },
-                  { icon: '🎯', step: '05', title: 'Authenticity Score',      color: '#fbbf24', desc: 'A final confidence percentage is computed with a REAL / FAKE / UNCERTAIN verdict, alongside per-signal breakdowns you can inspect.' },
-                  { icon: '👨‍⚖️', step: '06', title: 'Expert Review',          color: '#f87171', desc: 'For borderline or high-stakes cases, a human expert can review the AI findings and issue a binding verdict.' },
+                  { icon: '🧠', step: '03', title: 'Multi-Model AI Analysis', color: '#a855f7', desc: 'Two detection models (SigLIP and EfficientNet-B0) each give the file a fake-probability score. The scores are shown separately.' },
+                  { icon: '📊', step: '04', title: 'Cross-Validation',        color: '#10b981', desc: 'The two scores are averaged. When the models disagree, the result is marked low confidence.' },
+                  { icon: '🎯', step: '05', title: 'Authenticity Score',      color: '#fbbf24', desc: 'The average gives a provisional REAL / FAKE / UNCERTAIN label, with a heatmap per model showing where it looked.' },
+                  { icon: '👨‍⚖️', step: '06', title: 'Expert Review',          color: '#f87171', desc: 'A human expert reviews the scan and makes the final decision. The AI label is provisional until then.' },
                 ].map((s, i) => (
                   <motion.div
                     key={i}
@@ -562,7 +529,7 @@ export default function UserDashboard() {
                 <div className="flex items-center gap-2 px-4 py-2 rounded-xl bg-slate-900/60 border border-slate-700/60">
                   <MessageSquare size={13} className="text-cyan-400" />
                   <p className="text-slate-400 text-xs font-mono tracking-wider">
-                    EACH MODEL EXPLAINS ITS OWN FINDINGS BELOW
+                    PER-MODEL SCORES AND HEATMAPS BELOW
                   </p>
                 </div>
 

@@ -25,10 +25,10 @@ const DEMO_SCENARIOS = [
       verdictColor: '#34d399',
       signals: [
         { label: 'Lighting consistency',    score: 97, ok: true  },
-        { label: 'Facial micro-expressions', score: 93, ok: true  },
+        { label: 'Texture consistency', score: 93, ok: true  },
         { label: 'Pixel-level artifacts',    score: 4,  ok: true  },
       ],
-      summary: 'All three models agree this content shows no signs of manipulation. Lighting, facial geometry and audio synchronisation are consistent with authentic capture.',
+      summary: 'Example of a result where both models give a low fake score. This is scripted sample data, not a real analysis.',
     },
   },
   {
@@ -42,11 +42,11 @@ const DEMO_SCENARIOS = [
       confidence: 87,
       verdictColor: '#f87171',
       signals: [
-        { label: 'Wrong muscle movements',    score: 38, ok: false },
-        { label: 'Facial micro-expressions', score: 29, ok: false },
+        { label: 'Lighting consistency',    score: 38, ok: false },
+        { label: 'Texture consistency', score: 29, ok: false },
         { label: 'Pixel-level artifacts',    score: 82, ok: false },
       ],
-      summary: 'Strong GAN fingerprints detected around the facial boundary. Lighting direction is inconsistent with the background scene, and lip-sync lag of ~120 ms detected.',
+      summary: 'Example of a result where both models give a high fake score. This is scripted sample data, not a real analysis.',
     },
   },
   {
@@ -61,11 +61,11 @@ const DEMO_SCENARIOS = [
       verdictColor: '#fbbf24',
       signals: [
         { label: 'Lighting consistency',    score: 72, ok: true  },
-        { label: 'Facial micro-expressions', score: 55, ok: null  },
-        { label: 'Audio-lip sync',           score: 63, ok: null  },
+        { label: 'Texture consistency', score: 55, ok: null  },
+        { label: 'Edge consistency',           score: 63, ok: null  },
         { label: 'Pixel-level artifacts',    score: 41, ok: false },
       ],
-      summary: 'Models are split. Two indicators point to authentic capture while subtle pixel-level anomalies raise concern. Expert human review is recommended.',
+      summary: 'Example of a result where the models disagree, so it is left for expert review. This is scripted sample data, not a real analysis.',
     },
   },
 ];
@@ -181,7 +181,7 @@ export default function DemoPage() {
             lineHeight: 1.1,
             margin: '0 0 12px',
           }}>
-            Interactive Demo
+            Scripted Demo (simulated results)
           </h1>
           <p style={{ color: '#64748b', fontSize: '15px', maxWidth: '440px', margin: '0 auto' }}>
             Choose a scenario and watch the full detection pipeline run in real time.

@@ -24,9 +24,9 @@ export default function LandingPage() {
   }, []);
 
   const features = [
-    { icon: '', title: 'Multi Model Analysis',   description: '3 expertisd models, in different fields are combined with the accuracy of 87%' },
-    { icon: '', title: 'Facial Expression AI',       description: 'Advanced neural networks analyze micro-expressions and natural movement patterns' },
-    { icon: '', title: 'Continuous Learning',        description: 'Self-improving AI model that learns from every verification' },
+    { icon: '', title: 'Multi Model Analysis', description: 'Two independent detection models score every upload, and you see each score separately' },
+    { icon: '', title: 'Visual Explanations',  description: 'Heatmaps show which regions of the image influenced each model' },
+    { icon: '', title: 'Expert Review',        description: 'A human expert reviews every scan and makes the final decision' },
   ];
 
   return (
