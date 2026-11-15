@@ -54,6 +54,11 @@ export default function Methodology() {
           <p className="text-slate-400 text-lg max-w-xl mx-auto leading-relaxed">
             A six-stage forensic pipeline combining two deep learning detectors with human expert review.
           </p>
+          <p className="text-slate-500 text-sm max-w-xl mx-auto leading-relaxed mt-4">
+            Expert verdicts are saved with each scan. The detection models do not learn from them
+            automatically. Our plan is to improve the models through periodic retraining on
+            expert-verified cases, tested on a held-out dataset before each update.
+          </p>
         </motion.div>
 
         {/* ── SYSTEM ARCHITECTURE DIAGRAM ── */}

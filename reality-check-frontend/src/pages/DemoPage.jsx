@@ -184,7 +184,7 @@ export default function DemoPage() {
             Scripted Demo (simulated results)
           </h1>
           <p style={{ color: '#64748b', fontSize: '15px', maxWidth: '440px', margin: '0 auto' }}>
-            Choose a scenario and watch the full detection pipeline run in real time.
+            Choose a scenario and step through each stage of the detection pipeline. Every result on this page is a scripted example, not a live analysis.
           </p>
         </motion.div>
 
