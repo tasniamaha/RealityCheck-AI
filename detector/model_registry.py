@@ -29,7 +29,7 @@ DEFAULT_HF_DETECTOR = 'prithivMLmods/deepfake-detector-model-v1'
 
 # Off: in evaluation Xception ranked below chance on AI-generated images
 # (the checkpoint looks like a face-swap video model). Set True to load and use it again.
-XCEPTION_ENABLED = False
+XCEPTION_ENABLED = True
 
 
 # -- Xception --
