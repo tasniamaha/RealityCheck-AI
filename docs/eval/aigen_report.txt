@@ -1,0 +1,38 @@
+﻿[ModelRegistry] Loading Model 1 - Hugging Face detector...
+[ModelRegistry] OK SigLIP ready (fake index = 0).
+[ModelRegistry] Loading Model 2 - Xception...
+[ModelRegistry] OK Xception ready.
+[ModelRegistry] Loading Model 3 - EfficientNet-B0 (Custom)...
+[ModelRegistry] OK EfficientNet ready.
+[ModelRegistry] 3/3 models loaded. Running on: CPU
+Test set: 100 real, 100 fake
+[FaceDetector] Using YuNet: face_detection_yunet_2023mar.onnx
+  25/200 done
+  50/200 done
+  75/200 done
+  100/200 done
+  125/200 done
+  150/200 done
+  175/200 done
+  200/200 done
+
+                                                                  scored acc@50  fake%  real%    AUC
+----------------------------------------------------------------------------------------------------------------------------------------------------
+SigLIP                                                          200/200   55.5   45.0   66.0   62.0   TP=45 FN=55 TN=66 FP=34   best thr 35 (61.5)
+Xception                                                         56/200   28.6   22.0   83.3   44.3   TP=11 FN=39 TN=5 FP=1   best thr 95 (54.0)
+EfficientNet                                                    200/200   40.5   30.0   51.0   36.6   TP=30 FN=70 TN=51 FP=49   best thr 85 (49.5)
+----------------------------------------------------------------------------------------------------------------------------------------------------
+Ensemble: SigLIP+Xception+EfficientNet                          200/200   45.0   30.0   60.0   41.4   TP=30 FN=70 TN=60 FP=40   best thr 15 (50.5)
+Ensemble: SigLIP+Xception                                       200/200   48.5   31.0   66.0   53.2   TP=31 FN=69 TN=66 FP=34   best thr 30 (54.0)
+Ensemble: SigLIP+EfficientNet                                   200/200   48.5   37.0   60.0   46.1   TP=37 FN=63 TN=60 FP=40   best thr 25 (52.5)
+Ensemble: Xception+EfficientNet                                 200/200   37.0   22.0   52.0   33.7   TP=22 FN=78 TN=52 FP=48   best thr 90 (49.5)
+
+acc@50 = accuracy with one cut-off at 50.  fake% / real% = share of fake / real files classified correctly.
+AUC = 50 is random, 100 is perfect.  "best thr" is tuned on this same set, so it is optimistic.
+
+What the app shows (REAL below 20, FAKE from 50, otherwise UNCERTAIN -> expert):
+  fake files: 30 labelled FAKE, 53 UNCERTAIN, 17 wrongly labelled REAL
+  real files: 13 labelled REAL, 47 UNCERTAIN, 40 wrongly labelled FAKE
+Xception: AUC 44 is close to random - it is not helping.
+EfficientNet: AUC 37 is close to random - it is not helping.
+Per-file scores written to docs\eval\aigen_scores.csv
