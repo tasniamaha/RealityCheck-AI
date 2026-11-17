@@ -141,7 +141,7 @@ def detect(request):
             uploaded_by=request.user, is_cached_result=True, original_scan=existing_scan,
             media_file=existing_scan.media_file.name if existing_scan.media_file else None,
             **{f: getattr(existing_scan, f) for f in (
-                'siglip_prob', 'xception_prob', 'efficientnet_prob', 'aihuman_prob', 'expert_prob',
+                'siglip_prob', 'xception_prob', 'efficientnet_prob', 'aihuman_prob', 'openfake_prob', 'expert_prob',
                 'model_ensemble_prob', 'model_ensemble_verdict', 'provenance_note',
                 'final_verdict', 'final_confidence')},
             status='REVIEWED',

@@ -15,21 +15,21 @@ const MODEL_PERSONAS = {
   'SigLIP (HuggingFace)': {
     shortName: 'SigLIP',
     role: 'Vision transformer, public real/fake checkpoint',
-    color: 'cyan',
+    color: 'violet',
     icon: '',
     specialty: 'vision transformer fine-tuned on real vs. fake images',
   },
   'EfficientNet-B0 (Custom)': {
     shortName: 'EfficientNet',
     role: 'Convolutional network, custom-trained',
-    color: 'cyan',
+    color: 'amber',
     icon: '',
     specialty: 'convolutional network trained on real vs. fake images',
   },
   'Xception-FaceForensics': {
     shortName: 'Xception',
     role: 'Face-swap detector, FaceForensics++ checkpoint',
-    color: 'cyan',
+    color: 'rose',
     icon: '',
     specialty: 'convolutional network trained on face-swap videos; scores only the face it finds',
   },
@@ -40,10 +40,17 @@ const MODEL_PERSONAS = {
     icon: '',
     specialty: 'SigLIP classifier fine-tuned on 60k AI-generated and 60k human images',
   },
+  'OpenFake (SwinV2)': {
+    shortName: 'OpenFake',
+    role: 'Swin Transformer V2, trained on modern AI-generated images',
+    color: 'violet',
+    icon: '',
+    specialty: 'SwinV2 classifier trained on the OpenFake dataset of recent AI image generators',
+  },
   'Expert-trained (from reviews)': {
     shortName: 'Expert-trained',
     role: 'Learned from files your experts reviewed',
-    color: 'cyan',
+    color: 'amber',
     icon: '',
     specialty: 'classifier trained on expert verdicts and their reasons',
   },
@@ -52,8 +59,8 @@ const MODEL_PERSONAS = {
 const COLOR_MAP = {
   violet: { border: 'border-violet-500/40', shadow: 'shadow-violet-500/10', text: 'text-violet-400', dot: 'bg-violet-400' },
   rose:   { border: 'border-rose-500/40',   shadow: 'shadow-rose-500/10',   text: 'text-rose-400',   dot: 'bg-rose-400' },
-  amber:  { border: 'border-amber-500/40',  shadow: 'shadow-amber-500/10',  text: 'text-amber-400',  dot: 'bg-amber-400' },
-  cyan:   { border: 'border-cyan-500/40',   shadow: 'shadow-cyan-500/10',   text: 'text-cyan-400',   dot: 'bg-cyan-400' },
+  amber:  { border: 'border-amber-500/40',  shadow: '',  text: 'text-amber-400',  dot: 'bg-amber-400' },
+  cyan:   { border: 'border-cyan-500/40',   shadow: '',   text: 'text-cyan-400',   dot: 'bg-cyan-400' },
 };
 
 // ─── Call YOUR Django backend proxy ────────────────────────────────────────
@@ -117,7 +124,7 @@ function ModelVoiceCard({ res, voice, loading, error, index }) {
       initial={{ opacity: 0, y: 24 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ delay: index * 0.1 }}
-      className={`rounded-3xl p-6 border ${c.border} shadow-lg ${c.shadow} bg-slate-950/70 band ${res.verdict === 'FAKE' ? 'band-fake' : res.verdict === 'REAL' ? 'band-real' : res.verdict === 'UNCERTAIN' ? 'band-unsure' : ''}`}
+      className={`rounded-3xl p-6 border ${c.border} shadow-lg ${c.shadow} bg-slate-950/70 backdrop-blur-xl`}
     >
       <div className="flex items-start justify-between mb-4 gap-4">
         <div className="flex items-center gap-3 min-w-0">
@@ -148,21 +155,50 @@ function ModelVoiceCard({ res, voice, loading, error, index }) {
       <div className="rounded-2xl bg-black/40 border border-slate-800 p-4">
         <div className="flex items-center gap-2 mb-3">
           <MessageSquare size={12} className={c.text} />
-          <span className={`text-xs font-mono tracking-widest ${c.text}`}>{persona.shortName} SCORE DETAILS:</span>
+          <span className={`text-xs font-mono tracking-widest ${c.text}`}>{persona.shortName} EXPLAINS</span>
           {loading && <TypingDots colorClass={c.dot} />}
         </div>
-        {loading && <p className="text-slate-500 text-sm italic">Computing heatmap...</p>}
+        {loading && <p className="text-slate-500 text-sm italic">Working out why...</p>}
         {!loading && error && <p className="text-red-400/70 text-sm italic">{error}</p>}
         {!loading && !error && voice && (
           <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.6 }}>
-            {voice.heatmap && (
-              <img
-                src={voice.heatmap}
-                alt={`Regions that influenced the ${persona.shortName} score`}
-                className="w-full max-h-64 object-contain rounded-xl border border-slate-800 mb-3 bg-black"
-              />
+            <p className="text-white text-base font-semibold leading-snug mb-3">
+              {voice.headline || voice.voice}
+            </p>
+
+            {voice.reasons?.length > 0 && (
+              <>
+                <p className={`text-xs font-mono tracking-widest mb-2 ${c.text}`}>WHY</p>
+                <ul className="space-y-2 mb-4">
+                  {voice.reasons.map((r, i) => (
+                    <li key={i} className="flex gap-2 text-slate-300 text-sm leading-relaxed">
+                      <span className={`mt-2 w-1.5 h-1.5 rounded-full shrink-0 ${c.dot}`} />
+                      <span>{r}</span>
+                    </li>
+                  ))}
+                </ul>
+              </>
             )}
-            <p className="text-slate-200 text-sm leading-relaxed">{voice.voice}</p>
+
+            {voice.heatmap && (
+              <figure className="mb-4">
+                <img
+                  src={voice.heatmap}
+                  alt={`Areas that influenced the ${persona.shortName} score`}
+                  className="w-full max-h-64 object-contain rounded-xl border border-slate-800 bg-black"
+                />
+                {voice.heatmap_caption && (
+                  <figcaption className="text-slate-500 text-xs leading-relaxed mt-2">{voice.heatmap_caption}</figcaption>
+                )}
+              </figure>
+            )}
+
+            {voice.reliability && (
+              <div className="rounded-xl border border-slate-800 bg-black/30 px-3 py-2">
+                <p className={`text-xs font-mono tracking-widest mb-1 ${c.text}`}>HOW MUCH TO TRUST IT</p>
+                <p className="text-slate-400 text-xs leading-relaxed">{voice.reliability}</p>
+              </div>
+            )}
           </motion.div>
         )}
       </div>
@@ -191,7 +227,7 @@ function ModelVoiceCard({ res, voice, loading, error, index }) {
 // ─── Main Dashboard ────────────────────────────────────────────────────────
 export default function UserDashboard() {
   const { user, logout } = useAuth();
-  const { addNewCase, pollScanStatus, submitComplaint } = useApp(); // single, correct destructure
+  const { addNewCase, pollScanStatus, submitComplaint } = useApp(); // ← single, correct destructure
 
   // Upload / analysis state
   const [showHowItWorks, setShowHowItWorks] = useState(false);
@@ -199,10 +235,10 @@ export default function UserDashboard() {
   const [preview,        setPreview]        = useState(null);
   const [analyzing,      setAnalyzing]      = useState(false);
   const [results,        setResults]        = useState(null);
+  const [aiSummary,      setAiSummary]      = useState(null);
   const [scanId,         setScanId]         = useState(null);
   const [verdict,        setVerdict]        = useState(null);
   const [error,          setError]          = useState('');
-  const [aiSummary,      setAiSummary]      = useState(null);
 
   // Voice state
   const [voices,       setVoices]       = useState({});
@@ -303,44 +339,32 @@ export default function UserDashboard() {
 
   return (
     <div className="min-h-screen bg-black text-white overflow-hidden relative">
-      <div className="absolute inset-0   opacity-10 animate-grid" />
-      <div className="absolute inset-0 bg-black " />
-      <motion.div
-        animate={{ x: [0, 60, -40, 0], y: [0, -50, 70, 0] }}
-        transition={{ duration: 18, repeat: Infinity }}
-        className="absolute top-20 left-40 w-[500px] h-[500px] bg-cyan-500/10 rounded-full blur-3xl"
-      />
-      <motion.div
-        animate={{ x: [0, -70, 50, 0], y: [0, 60, -40, 0] }}
-        transition={{ duration: 22, repeat: Infinity, delay: 5 }}
-        className="absolute bottom-32 right-32 w-[400px] h-[400px] bg-purple-500/10 rounded-full blur-3xl"
-      />
+      <div className="absolute inset-0 opacity-10" />
+      <div className="absolute inset-0 bg-black" />
 
       <div className="relative z-10 max-w-7xl mx-auto p-8">
 
         {/* Header */}
         <header className="flex justify-between items-center mb-12 flex-wrap gap-4">
           <h1 className="text-5xl font-bold tracking-tighter">
-            Check a file
+            User<span className="text-cyan-400">Dashboard</span>
           </h1>
           <div className="flex items-center gap-3 flex-wrap">
             <motion.button
-              whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.97 }}
               onClick={() => setShowHowItWorks(true)}
-              className="flex items-center gap-2 px-5 py-3 rounded-2xl text-sm font-medium transition-all border border-purple-500/30 hover:bg-purple-500/15 hover:border-purple-400/50"
-              style={{ color: '#7A2AB8' }}
+              className="flex items-center gap-2 px-5 py-3 rounded-2xl text-sm font-medium transition-all border border-purple-500/30 hover:bg-purple-500/15 hover:border-purple-400/50 transition-colors"
+              style={{ color: '#c084fc' }}
             >
               <span></span> How It Works
             </motion.button>
             <div className="glass px-6 py-3 rounded-2xl text-sm flex items-center gap-2 border border-cyan-400/20">
-              <div className="w-2 h-2 bg-emerald-400 rounded-full animate-pulse" />
+              <div className="w-2 h-2 bg-emerald-400 rounded-full" />
               Welcome, <span className="text-cyan-400 font-medium">{user?.name || 'Operator'}</span>
             </div>
-            <motion.button
-              whileHover={{ scale: 1.05 }} onClick={logout}
-              className="flex items-center gap-2 px-6 py-3 bg-red-500/10 hover:bg-red-500/20 text-red-400 rounded-2xl transition-all border border-red-500/20"
+            <motion.button onClick={logout}
+              className="flex items-center gap-2 px-6 py-3 bg-red-500/10 hover:bg-red-500/20 text-red-400 rounded-2xl transition-all border border-red-500/20 transition-colors"
             >
-              <LogOut size={18} /> Sign out
+              <LogOut size={18} /> DISCONNECT
             </motion.button>
           </div>
         </header>
@@ -353,7 +377,7 @@ export default function UserDashboard() {
                 key="hiw-backdrop"
                 initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
                 onClick={() => setShowHowItWorks(false)}
-                style={{ position: 'fixed', inset: 0, background: 'rgba(236,235,241,0.7)', backdropFilter: 'blur(8px)', zIndex: 2000 }}
+                style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.7)', backdropFilter: 'blur(8px)', zIndex: 2000 }}
               />
               <motion.div
                 key="hiw-modal"
@@ -366,56 +390,56 @@ export default function UserDashboard() {
                   transform: 'translate(-50%, -50%)',
                   zIndex: 2100, width: '90%', maxWidth: '620px',
                   maxHeight: '85vh', overflowY: 'auto',
-                  background: 'rgba(255,255,255,0.97)',
-                  border: '1px solid rgba(122,42,184,0.2)',
+                  background: 'rgba(2,6,23,0.97)',
+                  border: '1px solid rgba(34,211,238,0.2)',
                   borderRadius: '24px', padding: '36px 32px',
                 }}
               >
-                <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: '2px', background: '#7A2AB8', borderRadius: '24px 24px 0 0' }} />
+                <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: '2px', background: '#22d3ee', borderRadius: '24px 24px 0 0' }} />
                 <button
                   onClick={() => setShowHowItWorks(false)}
-                  style={{ position: 'absolute', top: '16px', right: '16px', width: '30px', height: '30px', borderRadius: '8px', border: '1px solid rgba(23,19,31,0.15)', background: 'rgba(23,19,31,0.05)', color: '#777283', cursor: 'pointer', fontSize: '16px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+                  style={{ position: 'absolute', top: '16px', right: '16px', width: '30px', height: '30px', borderRadius: '8px', border: '1px solid rgba(148,163,184,0.15)', background: 'rgba(148,163,184,0.05)', color: '#64748b', cursor: 'pointer', fontSize: '16px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
                 >×</button>
 
                 <div style={{ marginBottom: '24px' }}>
-                  <div style={{ fontSize: '10px', letterSpacing: '0.2em', color: '#CDCAD5', textTransform: 'uppercase', marginBottom: '8px' }}>Guide</div>
-                  <h2 style={{ fontSize: '22px', fontWeight: 800, color: '#17131F', letterSpacing: '-0.02em', margin: 0 }}>
-                    How Reality<span style={{ color: '#7A2AB8' }}>Check</span> Works
+                  <div style={{ fontSize: '10px', letterSpacing: '0.2em', color: '#334155', textTransform: 'uppercase', marginBottom: '8px' }}>Guide</div>
+                  <h2 style={{ fontSize: '22px', fontWeight: 800, color: '#f1f5f9', letterSpacing: '-0.02em', margin: 0 }}>
+                    How Reality<span style={{ color: '#22d3ee' }}>Check</span> Works
                   </h2>
-                  <p style={{ fontSize: '13px', color: '#777283', marginTop: '6px', lineHeight: 1.6 }}>
+                  <p style={{ fontSize: '13px', color: '#475569', marginTop: '6px', lineHeight: 1.6 }}>
                     A six-stage forensic pipeline that analyses media authenticity end-to-end.
                   </p>
                 </div>
 
                 {[
-                  { icon: '', step: '01', title: 'Upload Media',           color: '#7A2AB8', desc: 'Drop any image or video file into the terminal. Supported formats: JPG, PNG, MP4, MOV. Your file is sent securely to the analysis backend.' },
-                  { icon: '', step: '02', title: 'Preprocessing',          color: '#7A2AB8', desc: 'Frames are extracted and normalised. For video, key frames are sampled at regular intervals to ensure comprehensive coverage.' },
-                  { icon: '', step: '03', title: 'Multi-Model AI Analysis', color: '#7A2AB8', desc: 'Three detection models (SigLIP, EfficientNet-B0 and AI-vs-Human) each give the file a fake-probability score. The scores are shown separately.' },
-                  { icon: '', step: '04', title: 'Cross-Validation',        color: '#196F42', desc: 'The three scores are averaged. When the models disagree, the result is marked low confidence.' },
-                  { icon: '', step: '05', title: 'Authenticity Score',      color: '#8A5C00', desc: 'The average gives a provisional REAL / FAKE / UNCERTAIN label, with a heatmap per model showing where it looked.' },
-                  { icon: '', step: '06', title: 'Expert Review',          color: '#B9281B', desc: 'A human expert reviews the scan and makes the final decision. The AI label is provisional until then.' },
+                  { icon: '', step: '01', title: 'Upload Media',           color: '#22d3ee', desc: 'Drop any image or video file into the terminal. Supported formats: JPG, PNG, MP4, MOV. Your file is sent securely to the analysis backend.' },
+                  { icon: '', step: '02', title: 'Preprocessing',          color: '#a855f7', desc: 'Frames are extracted and normalised. For video, key frames are sampled at regular intervals to ensure comprehensive coverage.' },
+                  { icon: '', step: '03', title: 'Multi-Model AI Analysis', color: '#a855f7', desc: 'Five detection models (SigLIP, Xception, EfficientNet-B0, AI-vs-Human and OpenFake) each give the file a fake-probability score. The scores are shown separately.' },
+                  { icon: '', step: '04', title: 'Cross-Validation',        color: '#10b981', desc: 'The scores are combined, weighted by how accurate each model was on our test set. When the models disagree, the result is marked low confidence.' },
+                  { icon: '', step: '05', title: 'Authenticity Score',      color: '#fbbf24', desc: 'The average gives a provisional REAL / FAKE / UNCERTAIN label, with a heatmap per model showing where it looked.' },
+                  { icon: '', step: '06', title: 'Expert Review',          color: '#f87171', desc: 'A human expert reviews the scan and makes the final decision. The AI label is provisional until then.' },
                 ].map((s, i) => (
                   <motion.div
                     key={i}
                     initial={{ opacity: 0, x: -12 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: i * 0.06 }}
-                    style={{ display: 'flex', gap: '16px', marginBottom: '16px', padding: '16px', borderRadius: '14px', background: 'rgba(255,255,255,0.6)', border: '1px solid rgba(23,19,31,0.08)' }}
+                    style={{ display: 'flex', gap: '16px', marginBottom: '16px', padding: '16px', borderRadius: '14px', background: 'rgba(15,23,42,0.6)', border: '1px solid rgba(148,163,184,0.08)' }}
                   >
                     <div style={{ flexShrink: 0, textAlign: 'center' }}>
                       <div style={{ width: '42px', height: '42px', borderRadius: '12px', background: `${s.color}18`, border: `1px solid ${s.color}35`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '20px', marginBottom: '4px' }}>{s.icon}</div>
                       <div style={{ fontSize: '9px', fontWeight: 700, color: s.color, letterSpacing: '0.1em' }}>{s.step}</div>
                     </div>
                     <div>
-                      <div style={{ fontSize: '13px', fontWeight: 700, color: '#17131F', marginBottom: '4px' }}>{s.title}</div>
-                      <div style={{ fontSize: '12px', color: '#777283', lineHeight: 1.7 }}>{s.desc}</div>
+                      <div style={{ fontSize: '13px', fontWeight: 700, color: '#e2e8f0', marginBottom: '4px' }}>{s.title}</div>
+                      <div style={{ fontSize: '12px', color: '#64748b', lineHeight: 1.7 }}>{s.desc}</div>
                     </div>
                   </motion.div>
                 ))}
 
-                <div style={{ marginTop: '8px', padding: '14px 16px', background: 'rgba(122,42,184,0.04)', border: '1px solid rgba(122,42,184,0.12)', borderRadius: '12px', textAlign: 'center' }}>
-                  <p style={{ fontSize: '12px', color: '#777283', margin: 0 }}>
+                <div style={{ marginTop: '8px', padding: '14px 16px', background: 'rgba(34,211,238,0.04)', border: '1px solid rgba(34,211,238,0.12)', borderRadius: '12px', textAlign: 'center' }}>
+                  <p style={{ fontSize: '12px', color: '#475569', margin: 0 }}>
                     Ready?{' '}
-                    <span style={{ color: '#7A2AB8', cursor: 'pointer', fontWeight: 600 }} onClick={() => setShowHowItWorks(false)}>
-                      Drop a file in the terminal above 
+                    <span style={{ color: '#22d3ee', cursor: 'pointer', fontWeight: 600 }} onClick={() => setShowHowItWorks(false)}>
+                      Drop a file in the terminal above ↑
                     </span>
                   </p>
                 </div>
@@ -443,14 +467,14 @@ export default function UserDashboard() {
           {/* Upload Terminal */}
           <motion.div
             initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }}
-            className="glass rounded-3xl p-10 neon-border h-fit relative overflow-hidden"
+            className="glass rounded-3xl p-10 h-fit relative overflow-hidden"
           >
-            <h2 className="text-3xl font-bold mb-8">Upload</h2>
+            <h2 className="text-3xl font-bold mb-8">MEDIA VERIFICATION TERMINAL</h2>
 
             <label className="border-2 border-dashed border-slate-600 hover:border-cyan-400 transition-all rounded-3xl p-16 flex flex-col items-center cursor-pointer group relative overflow-hidden">
               <div className="absolute inset-0 bg-cyan-400/10 opacity-0 group-hover:opacity-100 transition-all" />
-              <Upload className="w-16 h-16 mb-4 text-cyan-400 group-hover:scale-110 transition-transform" />
-              <p className="text-xl mb-2 tracking-wider">Drop a file here</p>
+              <Upload className="w-16 h-16 mb-4 text-cyan-400 transition-colors" />
+              <p className="text-xl mb-2 tracking-wider">DROP MEDIA HERE</p>
               <p className="text-slate-400 text-center text-sm">Image • Video • JPG, PNG, MP4, MOV</p>
               <input type="file" className="hidden" onChange={handleUpload} accept="image/*,video/*" />
             </label>
@@ -465,17 +489,16 @@ export default function UserDashboard() {
                   <img src={preview} className="w-full max-h-72 object-contain" alt="preview" />
                 </div>
                 <motion.button
-                  whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.97 }}
                   onClick={analyzeMedia} disabled={analyzing}
-                  className="mt-6 w-full py-5 bg-ink text-print rounded-2xl font-bold text-lg disabled:opacity-50 flex items-center justify-center gap-3 shadow-xl shadow-cyan-500/30"
+                  className="mt-6 w-full py-5 bg-cyan-500 rounded-2xl font-bold text-lg disabled:opacity-50 flex items-center justify-center gap-3 shadow-xl hover:bg-cyan-400 transition-colors"
                 >
                   {analyzing ? (
                     <span className="flex items-center gap-3">
                       <div className="w-5 h-5 border-2 border-white border-t-transparent animate-spin rounded-full" />
-                      Checking...
+                      NEURAL ANALYSIS IN PROGRESS...
                     </span>
                   ) : (
-                    <>Check this file <Play size={20} /></>
+                    <>ACTIVATE ANALYSIS PROTOCOL <Play size={20} /></>
                   )}
                 </motion.button>
               </div>
@@ -483,7 +506,7 @@ export default function UserDashboard() {
 
             {!results && (
               <div className="mt-8 space-y-2.5">
-                <p className="text-xs text-slate-500 font-mono tracking-widest mb-3">Detectors that will score your file</p>
+                <p className="text-xs text-slate-500 font-mono tracking-widest mb-3">ACTIVE DETECTION MODELS:</p>
                 {Object.values(MODEL_PERSONAS).map(p => {
                   const c = COLOR_MAP[p.color] || COLOR_MAP.cyan;
                   return (
@@ -507,10 +530,10 @@ export default function UserDashboard() {
                 className="space-y-6"
               >
                 {/* Verdict card */}
-                <div className="glass rounded-3xl p-8 neon-border">
+                <div className="glass rounded-3xl p-8">
                   {verdict ? (
                     <>
-                      <p className="text-xs font-mono text-slate-400 tracking-widest mb-2">Final verdict</p>
+                      <p className="text-xs font-mono text-slate-400 tracking-widest mb-2">FINAL VERDICT</p>
                       <p className={`text-5xl font-bold ${verdictColor(verdict.final_verdict)}`}>{verdict.final_verdict}</p>
                       <p className="text-slate-400 text-sm mt-2">
                         Confidence score: <span className="text-white font-mono">{verdict.final_confidence?.toFixed(1)}%</span>
@@ -518,11 +541,11 @@ export default function UserDashboard() {
                     </>
                   ) : (
                     <div className="flex items-center gap-3">
-                      <Clock className="text-amber-400 animate-pulse" size={20} />
+                      <Clock className="text-amber-400" size={20} />
                       <div>
                         <StatusBadge status="Awaiting Expert Review" />
                         <p className="text-slate-400 text-xs font-mono mt-2 tracking-widest">
-                          CASE #{scanId} — waiting for the expert verdict
+                          CASE #{scanId} — POLLING FOR EXPERT VERDICT...
                         </p>
                       </div>
                     </div>
@@ -532,14 +555,15 @@ export default function UserDashboard() {
                 {/* Status banner */}
                 <div className="text-center py-3 bg-amber-500/10 rounded-2xl border border-amber-500/30">
                   <p className="text-amber-400 font-mono tracking-widest text-xs">
-                    AI check done. Waiting for an expert to review.
+                    PRELIMINARY AI SCAN COMPLETE — AWAITING HUMAN OVERRIDE
                   </p>
                 </div>
+
 
                 {/* AI summary */}
                 {aiSummary && (
                   <div className="glass rounded-3xl p-6 border border-slate-700/60 space-y-3">
-                    <p className="text-xs font-mono text-slate-400 tracking-widest">AI label before expert review</p>
+                    <p className="text-xs font-mono text-slate-400 tracking-widest">AI LABEL BEFORE EXPERT REVIEW</p>
                     <p className={`text-3xl font-bold ${verdictColor(aiSummary.label)}`}>{aiSummary.label || '-'}</p>
                     {aiSummary.prob != null && (
                       <p className="text-slate-400 text-sm">
@@ -560,10 +584,9 @@ export default function UserDashboard() {
                 {/* Complaint button */}
                 <div className="flex justify-end">
                   <motion.button
-                    whileHover={{ scale: 1.04 }} whileTap={{ scale: 0.97 }}
                     onClick={openComplaint}
-                    className="flex items-center gap-2 px-5 py-2.5 rounded-2xl text-sm font-medium border border-amber-500/30 hover:bg-amber-500/15 hover:border-amber-400/50 transition-all"
-                    style={{ color: '#8A5C00' }}
+                    className="flex items-center gap-2 px-5 py-2.5 rounded-2xl text-sm font-medium border border-amber-500/30 hover:bg-amber-500/15 hover:border-amber-400/50 transition-all transition-colors"
+                    style={{ color: '#fbbf24' }}
                   >
                     <FileWarning size={15} /> File a Complaint
                   </motion.button>
@@ -573,7 +596,7 @@ export default function UserDashboard() {
                 <div className="flex items-center gap-2 px-4 py-2 rounded-xl bg-slate-900/60 border border-slate-700/60">
                   <MessageSquare size={13} className="text-cyan-400" />
                   <p className="text-slate-400 text-xs font-mono tracking-wider">
-                    Scores and heatmaps from each detector
+                    PER-MODEL SCORES AND HEATMAPS BELOW
                   </p>
                 </div>
 

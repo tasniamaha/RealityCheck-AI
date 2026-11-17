@@ -20,7 +20,7 @@ export default function ScrollToTopButton() {
           exit={{ opacity: 0, y: 20, scale: 0.8 }}
           transition={{ duration: 0.3 }}
           onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
-          className="fixed bottom-8 right-8 z-50 w-14 h-14 rounded-2xl bg-ink text-print flex items-center justify-center shadow-lg shadow-cyan-500/30 hover:scale-110 hover:brightness-110 transition-all neon-border"
+          className="fixed bottom-8 right-8 z-50 w-14 h-14 rounded-2xl bg-cyan-500 flex items-center justify-center shadow-lg hover:brightness-110 transition-all"
           aria-label="Scroll to top"
         >
           <ChevronUp className="w-6 h-6 text-white" />

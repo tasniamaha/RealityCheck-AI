@@ -23,6 +23,7 @@ SIGLIP_NAME       = 'SigLIP (HuggingFace)'
 XCEPTION_NAME     = 'Xception-FaceForensics'
 EFFICIENTNET_NAME = 'EfficientNet-B0 (Custom)'
 AIHUMAN_NAME      = 'AI-vs-Human (SigLIP)'
+OPENFAKE_NAME     = 'OpenFake (SwinV2)'
 EXPERT_NAME       = 'Expert-trained (from reviews)'
 
 # Which ScanResult column stores each model's score.
@@ -31,6 +32,7 @@ SCORE_FIELDS = {
     XCEPTION_NAME:     'xception_prob',
     EFFICIENTNET_NAME: 'efficientnet_prob',
     AIHUMAN_NAME:      'aihuman_prob',
+    OPENFAKE_NAME:     'openfake_prob',
     EXPERT_NAME:       'expert_prob',
 }
 
@@ -216,6 +218,11 @@ def run_aihuman(image: Image.Image) -> Dict[str, Any]:
                    registry.AIHUMAN_FAKE_INDEX, image)
 
 
+def run_openfake(image: Image.Image) -> Dict[str, Any]:
+    return _run_hf(OPENFAKE_NAME, registry.OPENFAKE_MODEL, registry.OPENFAKE_PROCESSOR,
+                   registry.OPENFAKE_FAKE_INDEX, image)
+
+
 def run_xception(image: Image.Image, transform=None) -> Dict[str, Any]:
     if registry.XCEPTION_MODEL is None:
         return _unavailable(XCEPTION_NAME, 'ERROR', 'Model not loaded')
@@ -251,6 +258,7 @@ if registry.XCEPTION_ENABLED:
     MODEL_RUNNERS.append((XCEPTION_NAME, run_xception))
 MODEL_RUNNERS.append((EFFICIENTNET_NAME, run_efficientnet))
 MODEL_RUNNERS.append((AIHUMAN_NAME, run_aihuman))
+MODEL_RUNNERS.append((OPENFAKE_NAME, run_openfake))
 
 
 def active_runners():

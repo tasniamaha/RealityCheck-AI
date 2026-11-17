@@ -1,204 +1,232 @@
-import { Link, useNavigate } from 'react-router-dom';
-import { useAuth } from '../context/AuthContext';
-import Logo from '../components/Logo';
+import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { motion, AnimatePresence } from 'framer-motion';
+import { Eye, ArrowRight } from 'lucide-react';
+import DemoPreviewSection from "../components/common/DemoPreviewSection";
+import LiveStatsBar from '../components/LiveStatsBar';
+import HowItWorksSection from '../components/HowItWorksSection';
 
-import frameA from '../assets/Include_image.jpg';
-import frameB from '../assets/include_2.jpg';
-import frameC from '../assets/hero_3.png';
-import frameD from '../assets/hero4.jpg';
-
-const FRAMES = [
-  { src: frameA, no: '21' },
-  { src: frameB, no: '22' },
-  { src: frameC, no: '23', marked: true },
-  { src: frameD, no: '24' },
-];
-
-const STEPS = [
-  { title: 'You upload a file', text: 'A photo or a short video. JPG, PNG, MP4 or MOV.' },
-  { title: 'Three detectors score it', text: 'SigLIP, EfficientNet-B0 and AI-vs-Human each give a fake score from 0 to 100.' },
-  { title: 'You see every score', text: 'Each one comes with a heatmap of the areas that moved it. Nothing is averaged away.' },
-  { title: 'An expert decides', text: 'A person reviews the file and the scores. Their verdict is the final one.' },
-];
-
-const SAMPLE = [
-  { name: 'SigLIP', score: 32.6 },
-  { name: 'EfficientNet-B0', score: 61.0 },
-  { name: 'AI-vs-Human', score: 97.2 },
-];
-
-const LIMITS = [
-  { title: 'Detectors are often wrong.', text: 'On our own test images they disagree with each other regularly. That is why you see all three scores, not one confident answer.' },
-  { title: 'A score is not proof.', text: 'A high fake score means the file looks like what a detector learned to flag. It can still be a real photo.' },
-  { title: 'A missing AI label proves nothing.', text: 'Some generators write a label into the file. Screenshots and re-uploads remove it.' },
-];
-
-function Sprockets() {
-  return (
-    <div className="flex justify-between px-3" aria-hidden="true">
-      {Array.from({ length: 26 }).map((_, i) => (
-        <span key={i} className="block w-[9px] h-[6px] rounded-[1px] bg-lightbox/90" />
-      ))}
-    </div>
-  );
-}
-
-function ContactStrip() {
-  return (
-    <div className="relative" style={{ transform: 'rotate(-3deg)' }}>
-      <div className="bg-ink py-2 shadow-[0_30px_40px_-28px_rgba(23,19,31,0.7)]">
-        <Sprockets />
-        <div className="flex justify-between px-4 pt-1 text-[10px] font-semibold text-lightbox/70" style={{ fontStretch: '80%' }} aria-hidden="true">
-          <span>REALITY CHECK 400</span><span>SAFETY FILM</span><span>REALITY CHECK 400</span>
-        </div>
-        <div className="grid grid-cols-4 gap-[6px] px-[6px] py-1">
-          {FRAMES.map(f => (
-            <figure key={f.no} className="relative m-0">
-              <img src={f.src} alt="" className="block w-full aspect-[3/2] object-cover" />
-              {f.marked && (
-                <svg viewBox="0 0 300 200" className="absolute -inset-[14%] w-[128%] h-[128%] overflow-visible" aria-hidden="true">
-                  <path
-                    className="marker-draw"
-                    style={{ '--len': 900 }}
-                    d="M150 14 C 232 6, 290 52, 284 104 C 278 162, 206 192, 138 188 C 66 184, 12 150, 18 96 C 24 44, 92 12, 176 22"
-                    fill="none" stroke="#7A2AB8" strokeWidth="7" strokeLinecap="round"
-                  />
-                </svg>
-              )}
-            </figure>
-          ))}
-        </div>
-        <div className="grid grid-cols-4 px-[6px] pb-1 text-[10px] font-semibold text-lightbox/70" style={{ fontStretch: '80%' }} aria-hidden="true">
-          {FRAMES.map(f => <span key={f.no} className="pl-1">{f.no} &gt; {f.no}A</span>)}
-        </div>
-        <Sprockets />
-      </div>
-    </div>
-  );
-}
+import heroImage1 from '../assets/Include_image.jpg';
+import heroImage2 from '../assets/include_2.jpg';
+import heroImage3 from '../assets/hero_3.png';
+import heroImage4 from '../assets/hero4.jpg';
 
 export default function LandingPage() {
   const navigate = useNavigate();
-  const { user } = useAuth();
-  const start = () => navigate(user ? '/user-dashboard' : '/register');
+  const [currentImage, setCurrentImage] = useState(0);
+  const images = [heroImage1, heroImage2, heroImage3, heroImage4];
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setCurrentImage((prev) => (prev + 1) % images.length);
+    }, 4000);
+    return () => clearInterval(interval);
+  }, []);
+
+  const features = [
+    { icon: '', title: 'Multi Model Analysis', description: 'Five independent detection models score every upload, and you see each score separately' },
+    { icon: '', title: 'Visual Explanations',  description: 'Heatmaps show which regions of the image influenced each model' },
+    { icon: '', title: 'Expert Review',        description: 'A human expert reviews every scan and makes the final decision' },
+  ];
 
   return (
-    <div className="bg-lightbox text-ink overflow-x-hidden">
+    <div style={{ minHeight: '100vh', background: '#000', color: '#fff', overflowX: 'hidden' }}>
 
-      {/* Hero */}
-      <section className="max-w-[1320px] mx-auto px-5 sm:px-8 pt-14 sm:pt-20 pb-20 grid lg:grid-cols-[minmax(0,4fr)_minmax(0,7fr)] gap-12 lg:gap-6 items-center">
-        <div>
-          <h1 className="display text-[clamp(4rem,11vw,10.5rem)] leading-[0.84] -ml-1">
-            Is this<br />photo<br />real?
-          </h1>
-          <p className="mt-8 max-w-[34rem] text-lg sm:text-xl text-slate-300">
-            Upload an image or video. Three detectors score it, you see every score
-            with a heatmap, and a human expert makes the final call.
-          </p>
-          <div className="mt-9 flex flex-wrap items-center gap-x-7 gap-y-4">
-            <button onClick={start} className="btn-ink !text-lg !px-7 !py-4">Check a file</button>
-            <Link to="/demo" className="font-semibold underline decoration-2 underline-offset-4 decoration-brand-500 hover:text-brand-500">
-              Watch a scripted demo
-            </Link>
-          </div>
+      {/* ── HERO ── */}
+      <section style={{ position: 'relative', minHeight: '100vh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: '#000' }}>
+
+        {/* Image mosaic background */}
+        <div style={{ position: 'absolute', inset: 0, zIndex: 0 }}>
+
+          <motion.div initial={{ opacity: 0, scale: 1.1 }} animate={{ opacity: 1, scale: 1 }} transition={{ duration: 2 }}
+            style={{ position: 'absolute', top: 0, left: 0, width: '55%', height: '60%' }}>
+            <img src={heroImage1} style={{ width: '100%', height: '100%', objectFit: 'cover' }} alt="" />
+            <div style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.05)' }} />
+          </motion.div>
+
+          <motion.div initial={{ opacity: 0, scale: 1.1 }} animate={{ opacity: 1, scale: 1 }} transition={{ duration: 2, delay: 0.3 }}
+            style={{ position: 'absolute', bottom: 0, right: 0, width: '55%', height: '60%' }}>
+            <img src={heroImage2} style={{ width: '100%', height: '100%', objectFit: 'cover' }} alt="" />
+            <div style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.05)' }} />
+          </motion.div>
+
+          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 2, delay: 0.6 }}
+            style={{ position: 'absolute', top: 0, right: 0, width: '45%', height: '40%' }}>
+            <AnimatePresence mode="wait">
+              <motion.img key={currentImage} src={images[currentImage]}
+                initial={{ opacity: 0, scale: 1.05 }} animate={{ opacity: 0.55, scale: 1 }} exit={{ opacity: 0 }}
+                transition={{ duration: 1.5 }}
+                style={{ width: '100%', height: '100%', objectFit: 'cover', filter: 'grayscale(1) contrast(1.25) brightness(0.75)' }} alt="" />
+            </AnimatePresence>
+            <div style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.2)' }} />
+          </motion.div>
+
+          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 2, delay: 0.9 }}
+            style={{ position: 'absolute', bottom: 0, left: 0, width: '45%', height: '40%' }}>
+            <AnimatePresence mode="wait">
+              <motion.img key={(currentImage + 1) % images.length} src={images[(currentImage + 1) % images.length]}
+                initial={{ opacity: 0, scale: 1.05 }} animate={{ opacity: 0.45, scale: 1 }} exit={{ opacity: 0 }}
+                transition={{ duration: 1.5 }}
+                style={{ width: '100%', height: '100%', objectFit: 'cover', filter: 'grayscale(1) contrast(1.25) brightness(0.5)' }} alt="" />
+            </AnimatePresence>
+            <div style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.2)' }} />
+          </motion.div>
+
+          {/* Central vignette */}
+          <div style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.38)' }} />
+
+          {/* Floating tiny circles */}
+          {[...Array(18)].map((_, i) => (
+            <motion.div key={i}
+              style={{
+                position: 'absolute', borderRadius: '50%',
+                width: `${3 + (i % 4) * 2}px`, height: `${3 + (i % 4) * 2}px`,
+                background: i % 2 === 0 ? 'rgba(242, 247, 248, 0.5)' : 'rgba(239, 234, 243, 0.4)',
+                left: `${(i * 43 + 5) % 94}%`, top: `${(i * 61 + 9) % 88}%`,
+                zIndex: 2, pointerEvents: 'none', filter: 'blur(0.4px)',
+              }}
+              animate={{ y: [0, -(12 + (i % 5) * 8), 0], x: [0, (i % 2 === 0 ? 1 : -1) * (6 + (i % 4) * 4), 0], opacity: [0.3, 0.9, 0.3], scale: [1, 1.4, 1] }}
+              transition={{ duration: 3.5 + (i % 5) * 1.1, repeat: Infinity, delay: (i * 0.35) % 3, ease: 'easeInOut' }}
+            />
+          ))}
         </div>
-        <div className="lg:-mr-44 mt-4 lg:mt-0">
-          <ContactStrip />
+
+        {/* Hero text */}
+        <div style={{ position: 'relative', zIndex: 10, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', minHeight: '100vh', textAlign: 'center', padding: '0 24px' }}>
+
+          <motion.div initial={{ opacity: 0, y: -16 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.7 }}
+            style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '32px' }}>
+            <div style={{ height: '1px', width: '64px', background: 'rgba(34,211,238,0.30)' }} />
+            <div style={{ height: '1px', width: '64px', background: 'rgba(34,211,238,0.30)' }} />
+          </motion.div>
+
+          <motion.h1 initial={{ opacity: 0, y: 40 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.9, delay: 0.15 }}
+            style={{ fontSize: 'clamp(4rem, 9vw, 11rem)', fontWeight: 900, lineHeight: 1, letterSpacing: '-0.04em', marginBottom: '8px', userSelect: 'none' }}>
+            REALITY
+          </motion.h1>
+
+          <motion.div initial={{ scaleX: 0 }} animate={{ scaleX: 1 }} transition={{ duration: 0.8, delay: 0.5 }}
+            style={{ display: 'flex', alignItems: 'center', gap: '16px', marginBottom: '8px', width: '100%', maxWidth: '600px' }}>
+            <div style={{ flex: 1, height: '1px', background: 'rgba(34,211,238,0.25)' }} />
+            <Eye style={{ width: '24px', height: '24px', color: '#22d3ee', flexShrink: 0 }} />
+            <div style={{ flex: 1, height: '1px', background: 'rgba(34,211,238,0.25)' }} />
+          </motion.div>
+
+          <motion.h1 initial={{ opacity: 0, y: 40 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.9, delay: 0.3 }}
+            style={{ fontSize: 'clamp(4rem, 9vw, 11rem)', fontWeight: 900, lineHeight: 1, letterSpacing: '-0.04em', marginBottom: '40px', userSelect: 'none', color: '#f1f8f9' }}>
+            CHECK
+          </motion.h1>
+
+          <motion.p initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.6 }}
+            style={{ color: '#cbd5e1', fontSize: 'clamp(1rem, 2vw, 1.2rem)', maxWidth: '420px', marginBottom: '48px', lineHeight: 1.7 }}>
+            In a world of synthetic media,{' '}
+            <span style={{ color: '#fff', fontWeight: 600 }}>trust needs verification.</span>
+          </motion.p>
+
+          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.75 }}
+            style={{ display: 'flex', gap: '16px', flexWrap: 'wrap', justifyContent: 'center' }}>
+            <motion.button className="hover-tint"
+              onClick={() => navigate('/login')}
+              style={{
+                display: 'flex', alignItems: 'center', gap: '10px',
+                padding: '16px 40px', borderRadius: '14px',
+                background: 'rgba(34,211,238,0.15)',
+                border: '1px solid rgba(236, 241, 242, 0.4)',
+                color: '#fff', fontSize: '15px', fontWeight: 700,
+                letterSpacing: '0.08em', textTransform: 'uppercase', cursor: 'pointer',
+              }}>
+              Enter Platform <ArrowRight style={{ width: '18px', height: '18px' }} />
+            </motion.button>
+            <motion.button className="hover-tint"
+              onClick={() => navigate('/demo')}
+              style={{
+                padding: '16px 40px', borderRadius: '14px',
+                background: 'transparent',
+                border: '1px solid rgba(239, 241, 245, 0.3)',
+                color: '#f3f5f9', fontSize: '15px', fontWeight: 600,
+                letterSpacing: '0.08em', textTransform: 'uppercase', cursor: 'pointer',
+              }}>
+              Interactive Demo
+            </motion.button>
+          </motion.div>
         </div>
       </section>
 
-      {/* How a check works */}
-      <section className="border-t border-ink">
-        <div className="max-w-[1320px] mx-auto px-5 sm:px-8 py-16 sm:py-20">
-          <h2 className="text-5xl sm:text-6xl">How a check works</h2>
-          <ol className="mt-12 grid sm:grid-cols-2 lg:grid-cols-4 gap-x-8 gap-y-10 list-none p-0">
-            {STEPS.map((s, i) => (
-              <li key={s.title} className="border-t-[3px] border-ink pt-4">
-                <span className="display block text-6xl text-brand-500">{i + 1}</span>
-                <h3 className="mt-3 text-2xl">{s.title}</h3>
-                <p className="mt-2 text-slate-400">{s.text}</p>
-              </li>
+      {/* ── LIVE STATS BAR ── */}
+      <LiveStatsBar />
+
+      {/* ── FEATURES ── */}
+      <section style={{ padding: '100px 24px', background: 'rgba(2,8,23,0.9)' }}>
+        <div style={{ maxWidth: '1100px', margin: '0 auto' }}>
+          <div style={{ textAlign: 'center', marginBottom: '64px' }}>
+            <motion.h2 initial={{ y: 20, opacity: 0 }} whileInView={{ y: 0, opacity: 1 }} viewport={{ once: true }}
+              style={{ fontSize: 'clamp(1.8rem, 3vw, 2.8rem)', fontWeight: 800, color: '#f1f5f9', marginBottom: '16px' }}>
+              Advanced Detection Technology
+            </motion.h2>
+           
+          </div>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '24px' }}>
+            {features.map((f, i) => (
+              <motion.div className="hover-card" key={f.title}
+                initial={{ y: 20, opacity: 0 }} whileInView={{ y: 0, opacity: 1 }} viewport={{ once: true }} transition={{ delay: i * 0.1 }}
+                style={{
+                  background: 'rgba(15,23,42,0.7)', border: '1px solid rgba(34,211,238,0.12)',
+                  borderRadius: '20px', padding: '28px 24px', backdropFilter: 'blur(10px)',
+                }}>
+                <div style={{ fontSize: '32px', marginBottom: '16px' }}>{f.icon}</div>
+                <h3 style={{ fontSize: '16px', fontWeight: 700, color: '#e2e8f0', marginBottom: '10px' }}>{f.title}</h3>
+                <p style={{ fontSize: '14px', color: '#475569', lineHeight: 1.7 }}>{f.description}</p>
+              </motion.div>
             ))}
-          </ol>
-        </div>
-      </section>
-
-      {/* What a result looks like */}
-      <section className="border-t border-ink bg-print">
-        <div className="max-w-[1320px] mx-auto px-5 sm:px-8 py-16 sm:py-20 grid lg:grid-cols-2 gap-12 items-start">
-          <div>
-            <h2 className="text-5xl sm:text-6xl">You get the scores, not just a stamp</h2>
-            <p className="mt-6 max-w-[36rem] text-lg text-slate-400">
-              Most checkers print one word. We show what each detector said, where it
-              looked, and whether they agree. When they do not, the file is marked
-              uncertain and waits for a person.
-            </p>
-            <Link to="/methodology" className="mt-6 inline-block font-semibold underline decoration-2 underline-offset-4 decoration-brand-500 hover:text-brand-500">
-              Read how the scores are produced
-            </Link>
-          </div>
-
-          <figure className="m-0">
-            <div className="crop bg-lightbox border border-rule band band-unsure p-6 sm:p-8">
-              <p className="text-sm font-semibold text-slate-400">AI label before expert review</p>
-              <p className="display text-6xl text-amber-400 mt-1">Uncertain</p>
-              <dl className="mt-7 space-y-5">
-                {SAMPLE.map(m => (
-                  <div key={m.name}>
-                    <div className="flex items-baseline justify-between gap-4">
-                      <dt className="font-semibold">{m.name}</dt>
-                      <dd className="m-0 font-mono font-bold text-lg">{m.score.toFixed(1)}% fake</dd>
-                    </div>
-                    <div className="mt-2 h-[6px] bg-slate-800">
-                      <div className="h-full bg-ink" style={{ width: `${m.score}%` }} />
-                    </div>
-                  </div>
-                ))}
-              </dl>
-              <p className="mt-7 text-slate-300">
-                The detectors disagree, so this file waits for an expert.
-              </p>
-            </div>
-            <figcaption className="mt-4 text-sm text-slate-500">Sample result. The numbers are an illustration.</figcaption>
-          </figure>
-        </div>
-      </section>
-
-      {/* Limits */}
-      <section className="border-t border-ink">
-        <div className="max-w-[1320px] mx-auto px-5 sm:px-8 py-16 sm:py-20">
-          <h2 className="text-5xl sm:text-6xl">What this cannot do</h2>
-          <div className="mt-10 grid md:grid-cols-3 gap-x-10 gap-y-8">
-            {LIMITS.map(l => (
-              <div key={l.title}>
-                <h3 className="text-2xl">{l.title}</h3>
-                <p className="mt-2 text-slate-400">{l.text}</p>
-              </div>
-            ))}
           </div>
         </div>
       </section>
 
-      {/* Closing */}
-      <section className="bg-ink text-print">
-        <div className="max-w-[1320px] mx-auto px-5 sm:px-8 py-16 flex flex-wrap items-center justify-between gap-8">
-          <h2 className="text-5xl sm:text-7xl text-print">Got a photo you doubt?</h2>
-          <button
-            onClick={start}
-            className="inline-flex items-center justify-center px-8 py-4 bg-print text-ink font-bold text-lg rounded hover:bg-brand-100 transition-colors"
-            style={{ fontStretch: '88%' }}
-          >
-            Check a file
-          </button>
+      {/* ── DEMO PREVIEW ── */}
+      <DemoPreviewSection />
+
+      {/* ── HOW IT WORKS ── */}
+      <HowItWorksSection />
+
+      {/* ── CTA ── */}
+      <section style={{ padding: '100px 24px', background: '#000', textAlign: 'center' }}>
+        <div style={{ maxWidth: '700px', margin: '0 auto' }}>
+          <motion.h2 initial={{ y: 20, opacity: 0 }} whileInView={{ y: 0, opacity: 1 }} viewport={{ once: true }}
+            style={{ fontSize: 'clamp(2rem, 4vw, 3rem)', fontWeight: 800, color: '#f1f5f9', marginBottom: '16px' }}>
+            Ready to Verify Reality?
+          </motion.h2>
+          <motion.p initial={{ y: 20, opacity: 0 }} whileInView={{ y: 0, opacity: 1 }} viewport={{ once: true }} transition={{ delay: 0.1 }}
+            style={{ color: '#64748b', fontSize: '16px', lineHeight: 1.7, marginBottom: '40px' }}>
+            Join thousands of organizations protecting themselves from synthetic media.
+          </motion.p>
+          <motion.div initial={{ y: 20, opacity: 0 }} whileInView={{ y: 0, opacity: 1 }} viewport={{ once: true }} transition={{ delay: 0.2 }}
+            style={{ display: 'flex', gap: '16px', justifyContent: 'center', flexWrap: 'wrap' }}>
+            <motion.button className="hover-solid"
+              onClick={() => navigate('/register')}
+              style={{ padding: '14px 36px', borderRadius: '14px', background: '#f2f9fa', border: 'none', color: '#000', fontSize: '14px', fontWeight: 700, letterSpacing: '0.06em', cursor: 'pointer' }}>
+              Create Free Account
+            </motion.button>
+            <motion.button className="hover-tint"
+              onClick={() => navigate('/expert-register')}
+              style={{ padding: '14px 36px', borderRadius: '14px', background: 'transparent', border: '1px solid rgba(148,163,184,0.3)', color: '#94a3b8', fontSize: '14px', fontWeight: 600, letterSpacing: '0.06em', cursor: 'pointer' }}>
+              Apply as Expert
+            </motion.button>
+          </motion.div>
         </div>
       </section>
 
-      <footer className="border-t border-ink">
-        <div className="max-w-[1320px] mx-auto px-5 sm:px-8 py-8 flex flex-wrap items-center justify-between gap-4">
-          <Logo size={28} />
-          <p className="text-sm text-slate-500">AI scores are estimates. A human expert gives the final verdict.</p>
-        </div>
+      {/* ── FOOTER ── */}
+      <footer style={{ background: '#000', borderTop: '1px solid rgba(30,41,59,0.8)', padding: '48px 24px', textAlign: 'center' }}>
+        <p style={{ color: '#64748b', fontSize: '16px', marginBottom: '12px' }}>
+          Created by <span style={{ color: '#22d3ee' }}>Noshin Syara</span>,{' '}
+          <span style={{ color: '#22d3ee' }}>Tasnia Rahman Maha</span> and{' '}
+          <span style={{ color: '#22d3ee' }}>Maliha Mehnaj</span>
+        </p>
+        <p style={{ color: '#334155', fontSize: '13px' }}>
+          © 2026 Reality Check  • IWC 2026 and I3C 2026
+        </p>
       </footer>
+
     </div>
   );
 }

@@ -36,6 +36,7 @@ class ScanResult(models.Model):
     xception_prob     = models.FloatField(null=True, blank=True)
     efficientnet_prob = models.FloatField(null=True, blank=True)
     aihuman_prob      = models.FloatField(null=True, blank=True)
+    openfake_prob     = models.FloatField(null=True, blank=True)
     expert_prob       = models.FloatField(null=True, blank=True)   # expert-trained detector
 
     model_ensemble_prob    = models.FloatField(null=True, blank=True)

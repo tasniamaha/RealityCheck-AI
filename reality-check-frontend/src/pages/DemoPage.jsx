@@ -18,11 +18,11 @@ const DEMO_SCENARIOS = [
     icon: '',
     label: 'Authentic Content',
     tagline: 'Show a real, unmanipulated result',
-    accentColor: '#7A2AB8',
+    accentColor: '#22d3ee',
     result: {
       verdict: 'AUTHENTIC',
       confidence: 94,
-      verdictColor: '#196F42',
+      verdictColor: '#34d399',
       signals: [
         { label: 'Lighting consistency',    score: 97, ok: true  },
         { label: 'Texture consistency', score: 93, ok: true  },
@@ -36,11 +36,11 @@ const DEMO_SCENARIOS = [
     icon: '',
     label: 'Deepfake Detected',
     tagline: 'Show a manipulated / AI-generated result',
-    accentColor: '#B9281B',
+    accentColor: '#f87171',
     result: {
       verdict: 'MANIPULATED',
       confidence: 87,
-      verdictColor: '#B9281B',
+      verdictColor: '#f87171',
       signals: [
         { label: 'Lighting consistency',    score: 38, ok: false },
         { label: 'Texture consistency', score: 29, ok: false },
@@ -54,11 +54,11 @@ const DEMO_SCENARIOS = [
     icon: '',
     label: 'Uncertain',
     tagline: 'Show an inconclusive, borderline result',
-    accentColor: '#8A5C00',
+    accentColor: '#fbbf24',
     result: {
       verdict: 'INCONCLUSIVE',
       confidence: 61,
-      verdictColor: '#8A5C00',
+      verdictColor: '#fbbf24',
       signals: [
         { label: 'Lighting consistency',    score: 72, ok: true  },
         { label: 'Texture consistency', score: 55, ok: null  },
@@ -107,21 +107,21 @@ export default function DemoPage() {
 
   /* ── helpers ── */
   const signalColor = (ok) => {
-    if (ok === true)  return '#196F42';
-    if (ok === false) return '#B9281B';
-    return '#8A5C00';
+    if (ok === true)  return '#34d399';
+    if (ok === false) return '#f87171';
+    return '#fbbf24';
   };
 
   const barBg = (ok) => {
-    if (ok === true)  return 'rgba(25,111,66,0.2)';
-    if (ok === false) return 'rgba(185,40,27,0.2)';
-    return 'rgba(138,92,0,0.2)';
+    if (ok === true)  return 'rgba(52,211,153,0.2)';
+    if (ok === false) return 'rgba(248,113,113,0.2)';
+    return 'rgba(251,191,36,0.2)';
   };
 
   /* ── styles ── */
   const card = {
-    background: 'rgba(255,255,255,0.7)',
-    border: '1px solid rgba(23,19,31,0.12)',
+    background: 'rgba(15,23,42,0.7)',
+    border: '1px solid rgba(148,163,184,0.12)',
     borderRadius: '16px',
     backdropFilter: 'blur(12px)',
   };
@@ -129,8 +129,9 @@ export default function DemoPage() {
   return (
     <div style={{
       minHeight: '100vh',
-      background: '#ECEBF1',
-      color: '#17131F',
+      background: '#020617',
+      color: '#e2e8f0',
+      fontFamily: "'Inter', system-ui, sans-serif",
       padding: '40px 20px 80px',
       position: 'relative',
       overflow: 'hidden',
@@ -163,10 +164,10 @@ export default function DemoPage() {
           <div style={{
             display: 'inline-block',
             padding: '4px 16px',
-            border: '1px solid rgba(122,42,184,0.35)',
+            border: '1px solid rgba(168,85,247,0.35)',
             borderRadius: '20px',
             fontSize: '11px',
-            color: '#7A2AB8',
+            color: '#c084fc',
             letterSpacing: '0.15em',
             textTransform: 'uppercase',
             marginBottom: '20px',
@@ -182,7 +183,7 @@ export default function DemoPage() {
           }}>
             Scripted Demo (simulated results)
           </h1>
-          <p style={{ color: '#777283', fontSize: '15px', maxWidth: '440px', margin: '0 auto' }}>
+          <p style={{ color: '#64748b', fontSize: '15px', maxWidth: '440px', margin: '0 auto' }}>
             Choose a scenario and step through each stage of the detection pipeline. Every result on this page is a scripted example, not a live analysis.
           </p>
         </motion.div>
@@ -217,10 +218,10 @@ export default function DemoPage() {
                       textAlign: 'left',
                       border: selected === s.id
                         ? `1px solid ${s.accentColor}`
-                        : '1px solid rgba(23,19,31,0.12)',
+                        : '1px solid rgba(148,163,184,0.12)',
                       background: selected === s.id
                         ? `rgba(${s.id === 'real' ? '34,211,238' : s.id === 'deepfake' ? '248,113,113' : '251,191,36'},0.06)`
-                        : 'rgba(255,255,255,0.7)',
+                        : 'rgba(15,23,42,0.7)',
                       transition: 'all 0.2s',
                       position: 'relative',
                       overflow: 'hidden',
@@ -234,10 +235,10 @@ export default function DemoPage() {
                       }} />
                     )}
                     <div style={{ fontSize: '28px', marginBottom: '10px' }}>{s.icon}</div>
-                    <div style={{ fontSize: '14px', fontWeight: 700, color: '#17131F', marginBottom: '4px' }}>
+                    <div style={{ fontSize: '14px', fontWeight: 700, color: '#f1f5f9', marginBottom: '4px' }}>
                       {s.label}
                     </div>
-                    <div style={{ fontSize: '12px', color: '#777283', lineHeight: 1.5 }}>
+                    <div style={{ fontSize: '12px', color: '#475569', lineHeight: 1.5 }}>
                       {s.tagline}
                     </div>
                     {selected === s.id && (
@@ -246,7 +247,7 @@ export default function DemoPage() {
                         width: '18px', height: '18px', borderRadius: '50%',
                         background: s.accentColor,
                         display: 'flex', alignItems: 'center', justifyContent: 'center',
-                        fontSize: '10px', color: '#ECEBF1', fontWeight: 800,
+                        fontSize: '10px', color: '#020617', fontWeight: 800,
                       }}>✓</div>
                     )}
                   </motion.button>
@@ -264,10 +265,10 @@ export default function DemoPage() {
                   onClick={runDemo}
                   style={{
                     padding: '14px 48px',
-                    background: 'rgba(122,42,184,0.15)',
-                    border: '1px solid rgba(122,42,184,0.4)',
+                    background: 'rgba(34,211,238,0.15)',
+                    border: '1px solid rgba(34,211,238,0.4)',
                     borderRadius: '12px',
-                    color: '#17131F',
+                    color: '#e2e8f0',
                     fontSize: '15px',
                     fontWeight: 700,
                     letterSpacing: '0.06em',
@@ -276,15 +277,15 @@ export default function DemoPage() {
                     textTransform: 'uppercase',
                   }}
                   onMouseEnter={e => {
-                    e.currentTarget.style.background = 'rgba(122,42,184,0.25)';
-                    e.currentTarget.style.borderColor = 'rgba(122,42,184,0.7)';
+                    e.currentTarget.style.background = 'rgba(34,211,238,0.25)';
+                    e.currentTarget.style.borderColor = 'rgba(34,211,238,0.7)';
                   }}
                   onMouseLeave={e => {
-                    e.currentTarget.style.background = 'rgba(122,42,184,0.15)';
-                    e.currentTarget.style.borderColor = 'rgba(122,42,184,0.4)';
+                    e.currentTarget.style.background = 'rgba(34,211,238,0.15)';
+                    e.currentTarget.style.borderColor = 'rgba(34,211,238,0.4)';
                   }}
                 >
-                  Run Demo 
+                  Run Demo →
                 </button>
                 
               </motion.div>
@@ -303,16 +304,16 @@ export default function DemoPage() {
               <div style={{ fontSize: '40px', marginBottom: '24px' }}>
                 {scenario.icon}
               </div>
-              <h2 style={{ fontSize: '20px', fontWeight: 700, marginBottom: '8px', color: '#17131F' }}>
+              <h2 style={{ fontSize: '20px', fontWeight: 700, marginBottom: '8px', color: '#f1f5f9' }}>
                 Analysing…
               </h2>
-              <p style={{ color: '#777283', fontSize: '13px', marginBottom: '32px', letterSpacing: '0.02em' }}>
+              <p style={{ color: '#475569', fontSize: '13px', marginBottom: '32px', letterSpacing: '0.02em' }}>
                 {statusMsg}
               </p>
 
               {/* Progress bar */}
               <div style={{
-                height: '6px', background: 'rgba(23,19,31,0.1)',
+                height: '6px', background: 'rgba(148,163,184,0.1)',
                 borderRadius: '3px', overflow: 'hidden', marginBottom: '24px',
               }}>
                 <motion.div
@@ -336,15 +337,15 @@ export default function DemoPage() {
                   }}>
                     <div style={{
                       width: '8px', height: '8px', borderRadius: '50%', flexShrink: 0,
-                      background: i < stepIdx ? '#196F42' : i === stepIdx ? scenario.accentColor : '#E2E0E8',
+                      background: i < stepIdx ? '#34d399' : i === stepIdx ? scenario.accentColor : '#1e293b',
                       boxShadow: i === stepIdx ? `0 0 8px ${scenario.accentColor}` : 'none',
                       transition: 'all 0.3s',
                     }} />
-                    <span style={{ fontSize: '12px', color: i <= stepIdx ? '#575262' : '#E2E0E8' }}>
+                    <span style={{ fontSize: '12px', color: i <= stepIdx ? '#94a3b8' : '#1e293b' }}>
                       {step.msg}
                     </span>
                     {i < stepIdx && (
-                      <span style={{ marginLeft: 'auto', fontSize: '11px', color: '#196F42' }}>✓</span>
+                      <span style={{ marginLeft: 'auto', fontSize: '11px', color: '#34d399' }}>✓</span>
                     )}
                   </div>
                 ))}
@@ -376,7 +377,7 @@ export default function DemoPage() {
 
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '12px' }}>
                   <div>
-                    <div style={{ fontSize: '11px', letterSpacing: '0.15em', color: '#CDCAD5', textTransform: 'uppercase', marginBottom: '6px' }}>
+                    <div style={{ fontSize: '11px', letterSpacing: '0.15em', color: '#334155', textTransform: 'uppercase', marginBottom: '6px' }}>
                       Verdict
                     </div>
                     <div style={{
@@ -391,7 +392,7 @@ export default function DemoPage() {
 
                   {/* Confidence ring */}
                   <div style={{ textAlign: 'center' }}>
-                    <div style={{ fontSize: '11px', letterSpacing: '0.1em', color: '#CDCAD5', textTransform: 'uppercase', marginBottom: '6px' }}>
+                    <div style={{ fontSize: '11px', letterSpacing: '0.1em', color: '#334155', textTransform: 'uppercase', marginBottom: '6px' }}>
                       Confidence
                     </div>
                     <div style={{
@@ -413,14 +414,14 @@ export default function DemoPage() {
                   </div>
                 </div>
 
-                <p style={{ marginTop: '16px', fontSize: '13px', color: '#777283', lineHeight: 1.7 }}>
+                <p style={{ marginTop: '16px', fontSize: '13px', color: '#64748b', lineHeight: 1.7 }}>
                   {scenario.result.summary}
                 </p>
               </div>
 
               {/* Signal breakdown */}
               <div style={{ ...card, padding: '24px 28px', marginBottom: '16px' }}>
-                <div style={{ fontSize: '11px', letterSpacing: '0.15em', color: '#CDCAD5', textTransform: 'uppercase', marginBottom: '16px' }}>
+                <div style={{ fontSize: '11px', letterSpacing: '0.15em', color: '#334155', textTransform: 'uppercase', marginBottom: '16px' }}>
                   Signal Breakdown
                 </div>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
@@ -432,13 +433,13 @@ export default function DemoPage() {
                       transition={{ delay: i * 0.08 }}
                     >
                       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '5px' }}>
-                        <span style={{ fontSize: '13px', color: '#575262' }}>{sig.label}</span>
+                        <span style={{ fontSize: '13px', color: '#94a3b8' }}>{sig.label}</span>
                         <span style={{ fontSize: '12px', fontWeight: 700, color: signalColor(sig.ok) }}>
                           {sig.ok === true ? 'OK' : sig.ok === false ? 'ANOMALY' : 'REVIEW'}
                           {' '}· {sig.score}%
                         </span>
                       </div>
-                      <div style={{ height: '5px', background: 'rgba(23,19,31,0.1)', borderRadius: '3px', overflow: 'hidden' }}>
+                      <div style={{ height: '5px', background: 'rgba(148,163,184,0.1)', borderRadius: '3px', overflow: 'hidden' }}>
                         <motion.div
                           initial={{ width: 0 }}
                           animate={{ width: `${sig.score}%` }}
@@ -456,13 +457,13 @@ export default function DemoPage() {
               <div style={{
                 display: 'flex', gap: '10px',
                 padding: '12px 16px',
-                background: 'rgba(138,92,0,0.04)',
-                border: '1px solid rgba(138,92,0,0.15)',
+                background: 'rgba(251,191,36,0.04)',
+                border: '1px solid rgba(251,191,36,0.15)',
                 borderRadius: '10px',
                 marginBottom: '32px',
               }}>
                 <span style={{ fontSize: '14px', flexShrink: 0 }}></span>
-                <p style={{ fontSize: '12px', color: '#777283', margin: 0, lineHeight: 1.6 }}>
+                <p style={{ fontSize: '12px', color: '#64748b', margin: 0, lineHeight: 1.6 }}>
                   This is a simulated result for demonstration only. No real AI analysis was performed.
                 </p>
               </div>
@@ -473,15 +474,15 @@ export default function DemoPage() {
                   onClick={reset}
                   style={{
                     padding: '11px 28px',
-                    border: '1px solid rgba(23,19,31,0.2)',
+                    border: '1px solid rgba(148,163,184,0.2)',
                     borderRadius: '10px', background: 'transparent',
-                    color: '#777283', fontSize: '13px', cursor: 'pointer',
+                    color: '#64748b', fontSize: '13px', cursor: 'pointer',
                     transition: 'all 0.15s',
                   }}
-                  onMouseEnter={e => { e.currentTarget.style.borderColor = 'rgba(23,19,31,0.4)'; e.currentTarget.style.color = '#575262'; }}
-                  onMouseLeave={e => { e.currentTarget.style.borderColor = 'rgba(23,19,31,0.2)'; e.currentTarget.style.color = '#777283'; }}
+                  onMouseEnter={e => { e.currentTarget.style.borderColor = 'rgba(148,163,184,0.4)'; e.currentTarget.style.color = '#94a3b8'; }}
+                  onMouseLeave={e => { e.currentTarget.style.borderColor = 'rgba(148,163,184,0.2)'; e.currentTarget.style.color = '#64748b'; }}
                 >
-                  Run another
+                  ← Run another
                 </button>
 
                 {!user && (
@@ -489,22 +490,22 @@ export default function DemoPage() {
                     onClick={() => setPhase('login')}
                     style={{
                       padding: '11px 28px',
-                      background: 'rgba(122,42,184,0.15)',
-                      border: '1px solid rgba(122,42,184,0.4)',
-                      borderRadius: '10px', color: '#17131F',
+                      background: 'rgba(34,211,238,0.15)',
+                      border: '1px solid rgba(34,211,238,0.4)',
+                      borderRadius: '10px', color: '#e2e8f0',
                       fontSize: '13px', fontWeight: 700, cursor: 'pointer',
                       letterSpacing: '0.04em', transition: 'all 0.2s',
                     }}
                     onMouseEnter={e => {
-                      e.currentTarget.style.background = 'rgba(122,42,184,0.25)';
-                      e.currentTarget.style.borderColor = 'rgba(122,42,184,0.7)';
+                      e.currentTarget.style.background = 'rgba(34,211,238,0.25)';
+                      e.currentTarget.style.borderColor = 'rgba(34,211,238,0.7)';
                     }}
                     onMouseLeave={e => {
-                      e.currentTarget.style.background = 'rgba(122,42,184,0.15)';
-                      e.currentTarget.style.borderColor = 'rgba(122,42,184,0.4)';
+                      e.currentTarget.style.background = 'rgba(34,211,238,0.15)';
+                      e.currentTarget.style.borderColor = 'rgba(34,211,238,0.4)';
                     }}
                   >
-                    Use with real files 
+                    Use with real files →
                   </button>
                 )}
 
@@ -513,14 +514,14 @@ export default function DemoPage() {
                     onClick={() => navigate('/user-dashboard')}
                     style={{
                       padding: '11px 28px',
-                      background: 'rgba(122,42,184,0.15)',
-                      border: '1px solid rgba(122,42,184,0.4)',
-                      borderRadius: '10px', color: '#17131F',
+                      background: 'rgba(34,211,238,0.15)',
+                      border: '1px solid rgba(34,211,238,0.4)',
+                      borderRadius: '10px', color: '#e2e8f0',
                       fontSize: '13px', fontWeight: 700, cursor: 'pointer',
                       transition: 'all 0.2s',
                     }}
                   >
-                    Go to Dashboard 
+                    Go to Dashboard →
                   </button>
                 )}
               </div>
@@ -533,13 +534,13 @@ export default function DemoPage() {
               key="login"
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
-              style={{ ...card, padding: '48px 36px', textAlign: 'center', borderColor: 'rgba(122,42,184,0.2)' }}
+              style={{ ...card, padding: '48px 36px', textAlign: 'center', borderColor: 'rgba(34,211,238,0.2)' }}
             >
               <div style={{ fontSize: '48px', marginBottom: '20px' }}></div>
-              <h2 style={{ fontSize: '24px', fontWeight: 800, letterSpacing: '-0.02em', marginBottom: '10px', color: '#17131F' }}>
+              <h2 style={{ fontSize: '24px', fontWeight: 800, letterSpacing: '-0.02em', marginBottom: '10px', color: '#f1f5f9' }}>
                 Ready for real analysis?
               </h2>
-              <p style={{ color: '#777283', fontSize: '14px', maxWidth: '380px', margin: '0 auto 32px', lineHeight: 1.7 }}>
+              <p style={{ color: '#64748b', fontSize: '14px', maxWidth: '380px', margin: '0 auto 32px', lineHeight: 1.7 }}>
                 Create a free account to upload your own images and videos, access your full scan history, and get expert reviews.
               </p>
 
@@ -548,9 +549,9 @@ export default function DemoPage() {
                   onClick={() => navigate('/register')}
                   style={{
                     padding: '14px',
-                    background: '#7A2AB8',
+                    background: '#22d3ee',
                     border: 'none', borderRadius: '12px',
-                    color: '#ECEBF1', fontSize: '14px', fontWeight: 800,
+                    color: '#020617', fontSize: '14px', fontWeight: 800,
                     letterSpacing: '0.06em', cursor: 'pointer',
                     textTransform: 'uppercase', transition: 'opacity 0.2s',
                   }}
@@ -564,19 +565,19 @@ export default function DemoPage() {
                   onClick={() => navigate('/login')}
                   style={{
                     padding: '14px',
-                    border: '1px solid rgba(122,42,184,0.3)',
+                    border: '1px solid rgba(34,211,238,0.3)',
                     borderRadius: '12px', background: 'transparent',
-                    color: '#7A2AB8', fontSize: '14px', fontWeight: 600,
+                    color: '#22d3ee', fontSize: '14px', fontWeight: 600,
                     letterSpacing: '0.04em', cursor: 'pointer',
                     transition: 'all 0.15s',
                   }}
                   onMouseEnter={e => {
-                    e.currentTarget.style.background = 'rgba(122,42,184,0.08)';
-                    e.currentTarget.style.borderColor = 'rgba(122,42,184,0.6)';
+                    e.currentTarget.style.background = 'rgba(34,211,238,0.08)';
+                    e.currentTarget.style.borderColor = 'rgba(34,211,238,0.6)';
                   }}
                   onMouseLeave={e => {
                     e.currentTarget.style.background = 'transparent';
-                    e.currentTarget.style.borderColor = 'rgba(122,42,184,0.3)';
+                    e.currentTarget.style.borderColor = 'rgba(34,211,238,0.3)';
                   }}
                 >
                   Sign In
@@ -586,14 +587,14 @@ export default function DemoPage() {
                   onClick={reset}
                   style={{
                     padding: '10px', border: 'none',
-                    background: 'transparent', color: '#CDCAD5',
+                    background: 'transparent', color: '#334155',
                     fontSize: '12px', cursor: 'pointer',
                     letterSpacing: '0.04em', transition: 'color 0.15s',
                   }}
-                  onMouseEnter={e => (e.currentTarget.style.color = '#777283')}
-                  onMouseLeave={e => (e.currentTarget.style.color = '#CDCAD5')}
+                  onMouseEnter={e => (e.currentTarget.style.color = '#64748b')}
+                  onMouseLeave={e => (e.currentTarget.style.color = '#334155')}
                 >
-                  Back to demo
+                  ← Back to demo
                 </button>
               </div>
             </motion.div>

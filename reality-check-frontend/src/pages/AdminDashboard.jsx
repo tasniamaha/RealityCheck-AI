@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import BrandLogo from '../components/BrandLogo';
 import LearningPanel from '../components/LearningPanel';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Shield, Users, AlertTriangle, LogOut, RefreshCw, ChevronDown, ChevronUp } from 'lucide-react';
@@ -28,16 +29,16 @@ function ExpertRow({ app, onAction, loading }) {
             </button>
             {app.status === 'Pending' && (
               <>
-                <motion.button whileHover={{ scale: 1.05 }}
+                <motion.button
                   disabled={loading}
                   onClick={() => onAction(app.id, 'approve')}
-                  className="bg-emerald-600 text-print hover:bg-emerald-500 px-4 py-2 rounded-xl text-xs font-medium transition disabled:opacity-50">
+                  className="bg-emerald-600 hover:bg-emerald-500 px-4 py-2 rounded-xl text-xs font-medium transition disabled:opacity-50 transition-colors">
                   Approve
                 </motion.button>
-                <motion.button whileHover={{ scale: 1.05 }}
+                <motion.button
                   disabled={loading}
                   onClick={() => onAction(app.id, 'reject')}
-                  className="bg-red-600 text-print hover:bg-red-500 px-4 py-2 rounded-xl text-xs font-medium transition disabled:opacity-50">
+                  className="bg-red-600 hover:bg-red-500 px-4 py-2 rounded-xl text-xs font-medium transition disabled:opacity-50 transition-colors">
                   Reject
                 </motion.button>
               </>
@@ -118,7 +119,7 @@ export default function AdminDashboard() {
     try {
       const data = await updateApplication(id, action);
       setActionMsg(action === 'approve'
-        ? ` Approved! ${data.username} now has expert access.`
+        ? `Approved! ${data.username} now has expert access.`
         : 'Application rejected.');
     } catch (err) {
       setActionMsg(`Error: ${err.message}`);
@@ -132,7 +133,7 @@ export default function AdminDashboard() {
     setComplaintMsg('');
     try {
       await updateComplaint(id, action);
-      setComplaintMsg(action === 'resolved' ? ' Complaint marked as resolved.' : 'Complaint dismissed.');
+      setComplaintMsg(action === 'resolved' ? 'Complaint marked as resolved.' : 'Complaint dismissed.');
     } catch (err) {
       setComplaintMsg(`Error: ${err.message}`);
     } finally {
@@ -148,31 +149,31 @@ export default function AdminDashboard() {
 
   return (
     <div className="min-h-screen bg-black text-white overflow-hidden relative">
-      <div className="absolute inset-0   opacity-10" />
-      <div className="absolute inset-0 bg-black " />
+      <div className="absolute inset-0 opacity-10" />
+      <div className="absolute inset-0 bg-black" />
 
       <div className="relative z-10 p-8 max-w-7xl mx-auto">
 
         {/* Header */}
         <header className="flex justify-between items-center mb-12 flex-wrap gap-4">
           <div className="flex items-center gap-4">
-            <Shield className="w-11 h-11 text-cyan-400" />
+            <BrandLogo size={44} text={false} />
             <h1 className="text-5xl font-bold tracking-tighter">
-              Admin
+              ADMIN<span className="text-cyan-400"> CONTROL</span>
             </h1>
           </div>
           <div className="flex items-center gap-4 flex-wrap">
             <div className="glass px-6 py-3 rounded-2xl text-sm flex items-center gap-2">
-              <div className="w-2 h-2 bg-emerald-400 rounded-full animate-pulse" />
+              <div className="w-2 h-2 bg-emerald-400 rounded-full" />
               {user?.name || 'Administrator'}
             </div>
-            <motion.button whileHover={{ scale: 1.05 }}
+            <motion.button
               onClick={() => { fetchApplications(); fetchComplaints(); }}
-              className="flex items-center gap-2 px-4 py-3 glass rounded-2xl text-cyan-400 border border-cyan-400/20">
+              className="flex items-center gap-2 px-4 py-3 glass rounded-2xl text-cyan-400 border border-cyan-400/20 hover:border-cyan-400/60 hover:text-cyan-300 transition-colors">
               <RefreshCw size={16} /> Refresh
             </motion.button>
-            <motion.button whileHover={{ scale: 1.05 }} onClick={logout}
-              className="flex items-center gap-2 px-5 py-3 bg-red-500/10 text-red-400 rounded-2xl border border-red-500/20">
+            <motion.button onClick={logout}
+              className="flex items-center gap-2 px-5 py-3 bg-red-500/10 text-red-400 rounded-2xl border border-red-500/20 hover:bg-red-500/25 transition-colors">
               <LogOut size={16} /> LOGOUT
             </motion.button>
           </div>
@@ -184,8 +185,6 @@ export default function AdminDashboard() {
             {actionMsg}
           </div>
         )}
-
-        <LearningPanel />
 
         {/* ── Expert Applications ── */}
         <div className="mb-16">
@@ -222,6 +221,9 @@ export default function AdminDashboard() {
             </table>
           </div>
         </div>
+
+        <LearningPanel />
+
 
         {/* ── Complaints ── */}
         <div>
@@ -275,7 +277,7 @@ export default function AdminDashboard() {
                                 <button
                                   disabled={complaintLoading}
                                   onClick={() => handleComplaintAction(c.id, 'resolved')}
-                                  className="bg-emerald-600 text-print hover:bg-emerald-500 px-4 py-2 rounded-xl text-xs font-medium transition disabled:opacity-50">
+                                  className="bg-emerald-600 hover:bg-emerald-500 px-4 py-2 rounded-xl text-xs font-medium transition disabled:opacity-50">
                                   Resolve
                                 </button>
                                 <button

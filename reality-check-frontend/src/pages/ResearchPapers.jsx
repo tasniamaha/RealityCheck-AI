@@ -1,4 +1,5 @@
 import { motion } from 'framer-motion';
+import BrandLogo from '../components/BrandLogo';
 import { ArrowLeft, ExternalLink, BookOpen, Shield, Search, Tag } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useState } from 'react';
@@ -23,9 +24,23 @@ export default function ResearchPapers() {
   return (
     <div className="min-h-screen bg-black text-white overflow-hidden">
       {/* Background */}
-      <div className="fixed inset-0   opacity-[0.06] pointer-events-none" />
-      <div className="fixed inset-0  pointer-events-none" />
+      <div className="fixed inset-0 opacity-[0.06] pointer-events-none" />
+      <div className="fixed inset-0 pointer-events-none" />
 
+      {/* Navbar */}
+      <nav className="fixed top-0 w-full z-50 glass border-b border-cyan-500/20">
+        <div className="max-w-7xl mx-auto px-8 py-5 flex justify-between items-center">
+          <div className="flex items-center gap-3">
+            <BrandLogo size={40} />
+          </div>
+          <button
+            onClick={() => navigate('/methodology')}
+            className="flex items-center gap-2 text-sm text-slate-400 hover:text-cyan-400 transition-colors"
+          >
+            <ArrowLeft size={16} /> Back to Methodology
+          </button>
+        </div>
+      </nav>
 
       <div className="max-w-6xl mx-auto px-8 pt-32 pb-24 relative z-10">
 

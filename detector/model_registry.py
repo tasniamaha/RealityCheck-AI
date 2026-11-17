@@ -23,6 +23,9 @@ EFFICIENTNET_MODEL = None
 AIHUMAN_MODEL      = None
 AIHUMAN_PROCESSOR  = None
 AIHUMAN_FAKE_INDEX = 0
+OPENFAKE_MODEL     = None
+OPENFAKE_PROCESSOR = None
+OPENFAKE_FAKE_INDEX = 0
 EXPERT_HEAD        = None   # set by detector.learning once experts have taught it
 MODELS_LOADED      = False
 LOAD_ERRORS        = {}
@@ -34,6 +37,10 @@ DEFAULT_HF_DETECTOR = 'prithivMLmods/deepfake-detector-model-v1'
 # Third model: a SigLIP classifier fine-tuned on 60k AI-generated vs 60k human images
 # (labels 'ai' / 'hum'). Override with THIRD_HF_DETECTOR_MODEL = '<model id>' in settings.py.
 DEFAULT_THIRD_HF_DETECTOR = 'Ateeqq/ai-vs-human-image-detector'
+
+# Fifth model: SwinV2 trained on the OpenFake dataset (modern AI-generated images).
+# Override with OPENFAKE_DETECTOR_MODEL = '<model id>' in settings.py.
+DEFAULT_OPENFAKE_DETECTOR = 'bendavidsteel/openfake-swinv2-base'
 
 # Off: in evaluation Xception ranked below chance on AI-generated images
 # (the checkpoint looks like a face-swap video model). Set True to load and use it again.
@@ -137,6 +144,7 @@ def load_all_models():
     global SIGLIP_MODEL, SIGLIP_PROCESSOR, SIGLIP_FAKE_INDEX
     global XCEPTION_MODEL, EFFICIENTNET_MODEL, MODELS_LOADED
     global AIHUMAN_MODEL, AIHUMAN_PROCESSOR, AIHUMAN_FAKE_INDEX
+    global OPENFAKE_MODEL, OPENFAKE_PROCESSOR, OPENFAKE_FAKE_INDEX
 
     if MODELS_LOADED:
         return
@@ -183,10 +191,20 @@ def load_all_models():
         LOAD_ERRORS['aihuman'] = str(e)
         print(f'[ModelRegistry] FAILED AI-vs-Human failed: {e}')
 
+    openfake = getattr(settings, 'OPENFAKE_DETECTOR_MODEL', DEFAULT_OPENFAKE_DETECTOR)
+    print(f'[ModelRegistry] Loading OpenFake detector ({openfake})...')
+    try:
+        OPENFAKE_MODEL, OPENFAKE_PROCESSOR, OPENFAKE_FAKE_INDEX = load_hf_detector(openfake)
+        print(f'[ModelRegistry] OK OpenFake ready (fake index = {OPENFAKE_FAKE_INDEX}).')
+    except Exception as e:
+        OPENFAKE_MODEL = OPENFAKE_PROCESSOR = None
+        LOAD_ERRORS['openfake'] = str(e)
+        print(f'[ModelRegistry] FAILED OpenFake failed: {e}')
+
     from detector import learning
     learning.load_head()
 
     MODELS_LOADED = True
-    loaded = sum(m is not None for m in (SIGLIP_MODEL, XCEPTION_MODEL, EFFICIENTNET_MODEL, AIHUMAN_MODEL))
-    wanted = 4 if XCEPTION_ENABLED else 3
+    loaded = sum(m is not None for m in (SIGLIP_MODEL, XCEPTION_MODEL, EFFICIENTNET_MODEL, AIHUMAN_MODEL, OPENFAKE_MODEL))
+    wanted = 5 if XCEPTION_ENABLED else 4
     print(f'[ModelRegistry] {loaded}/{wanted} models loaded. Running on: {DEVICE.upper()}')

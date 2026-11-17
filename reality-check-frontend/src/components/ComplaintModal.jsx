@@ -17,7 +17,7 @@ export default function ComplaintModal({
       {show && (
         <div className="fixed inset-0 z-50 flex items-center justify-center">
           
-          {/*  Background Overlay */}
+          {/* Background Overlay */}
           <motion.div
             className="absolute inset-0 bg-black/60 backdrop-blur-sm"
             initial={{ opacity: 0 }}
@@ -25,15 +25,15 @@ export default function ComplaintModal({
             exit={{ opacity: 0 }}
           />
 
-          {/*  Modal Box */}
+          {/* Modal Box */}
           <motion.div
             initial={{ scale: 0.8, opacity: 0, y: 40 }}
             animate={{ scale: 1, opacity: 1, y: 0 }}
             exit={{ scale: 0.8, opacity: 0, y: 40 }}
             transition={{ duration: 0.25 }}
-            className="relative z-10 w-full max-w-md bg-[#FFFFFF] border border-cyan-500/30 rounded-2xl p-6 shadow-2xl"
+            className="relative z-10 w-full max-w-md bg-[#0b1120] border border-cyan-500/30 rounded-2xl p-6 shadow-2xl"
           >
-            {/*  Close Button */}
+            {/* Close Button */}
             <button
               onClick={onClose}
               className="absolute top-3 right-3 text-gray-400 hover:text-white text-lg"
@@ -41,19 +41,19 @@ export default function ComplaintModal({
               ×
             </button>
 
-            {/*  Title */}
+            {/* Title */}
             <h2 className="text-xl font-semibold text-white mb-4">
               File Complaint
             </h2>
 
-            {/*  Success Message */}
+            {/* Success Message */}
             {done ? (
               <p className="text-green-400 text-center">
                 Complaint submitted successfully!
               </p>
             ) : (
               <>
-                {/*  Reason Input */}
+                {/* Reason Input */}
                 <input
                   value={reason}
                   onChange={(e) => setReason(e.target.value)}
@@ -61,7 +61,7 @@ export default function ComplaintModal({
                   className="w-full mb-3 p-2 rounded bg-gray-800 text-white outline-none"
                 />
 
-                {/*  Details Input */}
+                {/* Details Input */}
                 <textarea
                   value={details}
                   onChange={(e) => setDetails(e.target.value)}
@@ -70,16 +70,16 @@ export default function ComplaintModal({
                   rows={4}
                 />
 
-                {/*  Error Message */}
+                {/* Error Message */}
                 {error && (
                   <p className="text-red-400 text-sm mb-2">{error}</p>
                 )}
 
-                {/*  Submit Button */}
+                {/* Submit Button */}
                 <button
                   onClick={onSubmit}
                   disabled={sending}
-                  className="w-full bg-cyan-500 text-print hover:bg-cyan-600 font-semibold py-2 rounded transition"
+                  className="w-full bg-cyan-500 hover:bg-cyan-600 text-black font-semibold py-2 rounded transition"
                 >
                   {sending ? "Submitting..." : "Submit"}
                 </button>

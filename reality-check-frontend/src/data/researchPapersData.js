@@ -133,24 +133,24 @@ export const tagColor = {
     border: 'border-cyan-400/30',
     text: 'text-cyan-400',
     bg: 'bg-cyan-400/8',
-    glow: '0 0 20px rgba(122,42,184,0.08)',
+    glow: '0 0 20px rgba(34,211,238,0.08)',
   },
   purple: {
     border: 'border-purple-400/30',
     text: 'text-purple-400',
     bg: 'bg-purple-400/8',
-    glow: '0 0 20px rgba(122,42,184,0.08)',
+    glow: '0 0 20px rgba(192,132,252,0.08)',
   },
 };
 
 // ─── METHODOLOGY ARCHITECTURE STEPS ──────────────────────────────────────────
 export const architectureSteps = [
-  { id: '01', label: 'Upload',        sub: 'JPG · PNG · MP4 · MOV',          color: '#7A2AB8' },
-  { id: '02', label: 'Preprocess',    sub: 'Frame extraction · Normalise',    color: '#7A2AB8' },
-  { id: '03', label: 'AI Analysis',   sub: 'SigLIP · Xception · EfficientNet-B0 · AI-vs-Human', color: '#7A2AB8' },
-  { id: '04', label: 'Ensemble',      sub: 'Weighted by measured accuracy', color: '#7A2AB8' },
-  { id: '05', label: 'Score',         sub: 'REAL · FAKE · UNCERTAIN',         color: '#7A2AB8' },
-  { id: '06', label: 'Expert Verdict',sub: 'Human-certified decision',        color: '#7A2AB8' },
+  { id: '01', label: 'Upload',        sub: 'JPG · PNG · MP4 · MOV',          color: '#22d3ee' },
+  { id: '02', label: 'Preprocess',    sub: 'Frame extraction · Normalise',    color: '#818cf8' },
+  { id: '03', label: 'AI Analysis',   sub: 'SigLIP · Xception · EfficientNet-B0 · AI-vs-Human · OpenFake', color: '#22d3ee' },
+  { id: '04', label: 'Ensemble',      sub: 'Weighted by measured accuracy', color: '#818cf8' },
+  { id: '05', label: 'Score',         sub: 'REAL · FAKE · UNCERTAIN',         color: '#22d3ee' },
+  { id: '06', label: 'Expert Verdict',sub: 'Human-certified decision',        color: '#c084fc' },
 ];
 
 // ─── METHODOLOGY DEVELOPMENT PHASES ──────────────────────────────────────────
@@ -173,7 +173,7 @@ export const methodologyPhases = [
   {
     num: '04',
     title: 'Deep Learning Development',
-    body: 'Three detectors are used: two public SigLIP checkpoints and our EfficientNet-B0, re-trained on about 3,000 DeepFakeFace images that are not in the test set. Each gives a fake score from 0 to 100.',
+    body: 'Five detectors are used: SigLIP, Xception (face swaps), AI-vs-Human, OpenFake (recent AI generators) and our EfficientNet-B0, re-trained on about 3,000 DeepFakeFace images that are not in the test set. Each gives a fake score from 0 to 100.',
   },
   {
     num: '05',

@@ -32,7 +32,7 @@ from detector.video_detector import analyze_video
 IMAGE_EXTS = {'.jpg', '.jpeg', '.png', '.webp', '.bmp'}
 VIDEO_EXTS = {'.mp4', '.avi', '.mov', '.mkv'}
 SHORT = {det.SIGLIP_NAME: 'SigLIP', det.XCEPTION_NAME: 'Xception', det.EFFICIENTNET_NAME: 'EfficientNet',
-         det.AIHUMAN_NAME: 'AI-vs-Human', det.EXPERT_NAME: 'Expert-trained'}
+         det.AIHUMAN_NAME: 'AI-vs-Human', det.EXPERT_NAME: 'Expert-trained', det.OPENFAKE_NAME: 'OpenFake'}
 WIDTH = 62
 
 

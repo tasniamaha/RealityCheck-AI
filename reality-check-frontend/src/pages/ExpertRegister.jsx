@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import BrandLogo from '../components/BrandLogo';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Shield, ArrowRight, ArrowLeft, UserCheck } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
@@ -79,7 +80,7 @@ export default function ExpertRegister() {
       }
 
       // Success — application submitted, pending admin approval
-      alert(' Application submitted! Your account is active but expert access is pending admin approval.');
+      alert('Application submitted! Your account is active but expert access is pending admin approval.');
       navigate('/user-dashboard');
     } catch (err) {
       setError(err.message || 'Network error. Make sure the server is running.');
@@ -91,21 +92,17 @@ export default function ExpertRegister() {
 
   return (
     <div className="min-h-screen bg-black text-white overflow-hidden relative flex items-center justify-center">
-      <div className="absolute inset-0   opacity-10"></div>
-      <div className="absolute inset-0 bg-black "></div>
-      <motion.div animate={{ scale:[1,1.08,1] }} transition={{ duration:12, repeat:Infinity }}
-        className="absolute top-20 left-20 w-96 h-96 bg-cyan-500/10 rounded-full blur-3xl" />
-      <motion.div animate={{ scale:[1,1.12,1] }} transition={{ duration:15, repeat:Infinity, delay:4 }}
-        className="absolute bottom-20 right-20 w-80 h-80 bg-purple-500/10 rounded-full blur-3xl" />
+      <div className="absolute inset-0 opacity-10"></div>
+      <div className="absolute inset-0 bg-black"></div>
 
       <div className="relative z-10 w-full max-w-3xl px-6 py-12">
         <motion.div initial={{ opacity:0, y:40 }} animate={{ opacity:1, y:0 }}
-          className="glass rounded-3xl p-12 neon-border">
+          className="glass rounded-3xl p-12">
           <div className="flex justify-center mb-8">
             <div className="flex items-center gap-4">
-              <Shield className="w-12 h-12 text-cyan-400" />
+              <BrandLogo size={48} text={false} />
               <h1 className="text-5xl font-bold tracking-tighter">
-                Apply as an expert
+                BECOME A<span className="text-cyan-400"> VERIFIER</span>
               </h1>
             </div>
           </div>

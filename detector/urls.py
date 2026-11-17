@@ -1,5 +1,5 @@
 from django.urls import path
-from detector import views
+from detector import views, auth_api
 
 urlpatterns = [
     # -- Public Django-template pages ---------------------------------------------
@@ -14,10 +14,11 @@ urlpatterns = [
     path('expert/review/<int:scan_id>/',  views.expert_review, name='expert_review'),
 
     # -- JSON API (used by the React frontend) ------------------------------------
-    path('api/auth/login/',           views.api_login,           name='api_login'),
+    path('api/auth/login/',           auth_api.api_login,        name='api_login'),
+    path('api/auth/check/',           auth_api.api_auth_check,   name='api_auth_check'),
     path('api/auth/logout/',          views.api_logout,          name='api_logout'),
     path('api/auth/me/',              views.api_me,              name='api_me'),
-    path('api/auth/register/',        views.api_register,        name='api_register'),
+    path('api/auth/register/',        auth_api.api_register,     name='api_register'),
     path('api/auth/expert-register/', views.api_expert_register, name='api_expert_register'),
 
     path('api/expert/queue/',                views.api_expert_queue,  name='api_expert_queue'),

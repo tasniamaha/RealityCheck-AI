@@ -7,7 +7,7 @@ function Bar({ value, max }) {
   const pct = Math.min(100, Math.round((value / max) * 100));
   return (
     <div className="h-[6px] bg-slate-800 mt-2" aria-hidden="true">
-      <div className={`h-full ${pct >= 100 ? 'bg-emerald-500' : 'bg-ink'}`} style={{ width: `${pct}%` }} />
+      <div className={`h-full ${pct >= 100 ? 'bg-emerald-500' : 'bg-cyan-400'}`} style={{ width: `${pct}%` }} />
     </div>
   );
 }
@@ -73,7 +73,7 @@ export default function LearningPanel() {
   const last = status?.last_run;
 
   return (
-    <section className="mb-16 bg-print border border-rule p-6 sm:p-8">
+    <section className="mb-16 glass rounded-3xl border border-cyan-400/20 p-6 sm:p-8">
       <div className="flex flex-wrap items-start justify-between gap-4">
         <div className="max-w-[44rem]">
           <h2 className="text-4xl">Learning from expert reviews</h2>
@@ -83,7 +83,7 @@ export default function LearningPanel() {
             on the labelled test set.
           </p>
         </div>
-        <button onClick={trainNow} disabled={busy || !p?.ready || status?.state === 'running'} className="btn-ink">
+        <button onClick={trainNow} disabled={busy || !p?.ready || status?.state === 'running'} className="px-6 py-3 bg-cyan-500 hover:bg-cyan-400 text-black rounded-2xl font-semibold transition disabled:opacity-50">
           {status?.state === 'running' ? 'Training...' : 'Train now'}
         </button>
       </div>
@@ -113,7 +113,7 @@ export default function LearningPanel() {
           <p className="font-semibold">Reasons experts have given</p>
           <table className="mt-3 w-full text-sm">
             <thead>
-              <tr className="text-left text-slate-400 border-b border-rule">
+              <tr className="text-left text-slate-400 border-b border-slate-700">
                 <th className="py-2 pr-4 font-semibold">Files</th>
                 <th className="py-2 pr-4 font-semibold">Key words</th>
                 <th className="py-2 font-semibold">Written as</th>
@@ -121,7 +121,7 @@ export default function LearningPanel() {
             </thead>
             <tbody>
               {p.reasons.map(r => (
-                <tr key={r.label} className="border-b border-rule align-top">
+                <tr key={r.label} className="border-b border-slate-700 align-top">
                   <td className="py-2 pr-4 font-mono font-bold">{r.count}</td>
                   <td className="py-2 pr-4">{r.label}</td>
                   <td className="py-2 text-slate-400">{r.examples.map(e => `"${e}"`).join(', ')}</td>
@@ -133,7 +133,7 @@ export default function LearningPanel() {
       )}
 
       {status?.message && (
-        <div className={`mt-8 p-4 border band ${status.state === 'live' ? 'band-real' : status.state === 'rejected' ? 'band-unsure' : ''} border-rule bg-lightbox`}>
+        <div className={`mt-8 p-4 border band ${status.state === 'live' ? 'band-real' : status.state === 'rejected' ? 'band-unsure' : ''} border-slate-700 bg-slate-900/50 rounded-2xl`}>
           <p className="font-semibold">{status.message}</p>
           {status.error && <p className="text-red-400 text-sm mt-1">{status.error}</p>}
         </div>

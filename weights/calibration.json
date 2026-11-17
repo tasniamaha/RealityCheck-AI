@@ -1,15 +1,17 @@
 {
   "models": [
     "SigLIP (HuggingFace)",
+    "Xception-FaceForensics",
     "EfficientNet-B0 (Custom)",
     "AI-vs-Human (SigLIP)"
   ],
   "weights": [
-    0.049893,
-    0.397623,
-    0.124374
+    -0.002089,
+    0.201385,
+    0.491203,
+    0.135264
   ],
-  "bias": -0.06119,
+  "bias": 0.431569,
   "real_below": 30.0,
   "fake_from": 70.0,
   "trained_on": {
