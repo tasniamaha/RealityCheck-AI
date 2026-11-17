@@ -40,6 +40,11 @@ def _compute_file_hash(file_bytes):
     return hashlib.sha256(file_bytes).hexdigest()
 
 
+def _ai_label(verdict):
+    """Older scans may have stored REAL; the AI no longer gives that label."""
+    return 'UNCERTAIN' if verdict == 'REAL' else verdict
+
+
 def _prob_verdict(prob):
     if prob is None:
         return 'SKIPPED'
@@ -155,12 +160,12 @@ def detect(request):
             'original_scan_id':    existing_scan.id,
             'message':             'This file has been analyzed before. Using cached result.',
             'model_results':       _cached_model_results(existing_scan),
-            'ai_label':            existing_scan.model_ensemble_verdict,
+            'ai_label':            _ai_label(existing_scan.model_ensemble_verdict),
             'ensemble':            {
                 'model_name': 'Ensemble (Average)',
                 'fake_prob':  existing_scan.model_ensemble_prob,
-                'real_prob':  round(100 - existing_scan.model_ensemble_prob, 2) if existing_scan.model_ensemble_prob else None,
-                'verdict':    existing_scan.model_ensemble_verdict,
+                'real_prob':  round(100 - existing_scan.model_ensemble_prob, 2) if existing_scan.model_ensemble_prob is not None else None,
+                'verdict':    _ai_label(existing_scan.model_ensemble_verdict),
             },
             'final_verdict':       existing_scan.final_verdict,
             'final_confidence':    existing_scan.final_confidence,

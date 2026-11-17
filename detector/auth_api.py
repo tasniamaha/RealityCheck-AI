@@ -57,9 +57,7 @@ def check_username(username, mode):
     if not username:
         return {'ok': False, 'message': 'Enter a username.'}
     if mode == 'login':
-        if _find_user(username):
-            return {'ok': True, 'message': 'Account found.'}
-        return {'ok': False, 'message': 'No account with this username.'}
+        return {'ok': True, 'message': ''}     # never reveal whether an account exists
     if not USERNAME_RE.match(username):
         return {'ok': False, 'message': 'Use 3 or more letters, numbers or . @ + - _ (no spaces).'}
     if User.objects.filter(username__iexact=username).exists():
@@ -74,8 +72,6 @@ def check_email(email):
         validate_email(email)
     except ValidationError:
         return {'ok': False, 'message': 'This does not look like an email address.'}
-    if User.objects.filter(email__iexact=email).exists():
-        return {'ok': False, 'message': 'An account with this email already exists.'}
     return {'ok': True, 'message': 'Email looks good.'}
 
 
@@ -107,10 +103,8 @@ def api_auth_check(request):
     q = {k: str(v) for k, v in q.items() if v is not None}
     mode = q.get('mode', 'register')
     out = {}
-    if 'username' in q:
+    if 'username' in q and mode == 'register':
         out['username'] = check_username(q['username'].strip(), mode)
-    if 'email' in q and mode == 'register':
-        out['email'] = check_email(q['email'].strip())
     if 'password' in q and mode == 'register':
         out['password'] = check_password(q['password'], q.get('username', ''), q.get('email', ''))
     return _json(out)
@@ -145,22 +139,15 @@ def api_login(request):
     key = _fail_key(request, username)
     fails = cache.get(key, 0)
     if fails >= MAX_FAILS:
-        return _json({'error': 'Too many wrong passwords. Wait 5 minutes and try again.',
+        return _json({'error': 'Too many failed attempts. Wait 5 minutes and try again.',
                       'fields': {'password': 'Locked for 5 minutes.'}}, status=429)
 
+    # The same answer for an unknown username and a wrong password.
     account = _find_user(username)
-    if account is None:
-        return _json({'error': 'No account with this username.',
-                      'fields': {'username': 'No account with this username.'}}, status=401)
-
-    user = authenticate(request, username=account.username, password=password)
+    user = authenticate(request, username=account.username, password=password) if account else None
     if user is None:
-        fails += 1
-        cache.set(key, fails, LOCK_SECONDS)
-        left = MAX_FAILS - fails
-        msg = 'Wrong password.' + (f' {left} tr{"y" if left == 1 else "ies"} left.' if left > 0 else '')
-        if not account.is_active:
-            msg = 'This account is switched off. Contact the admin.'
+        cache.set(key, fails + 1, LOCK_SECONDS)
+        msg = 'Wrong username or password.'
         return _json({'error': msg, 'fields': {'password': msg}}, status=401)
 
     cache.delete(key)
@@ -193,6 +180,9 @@ def api_register(request):
     e = check_email(email)
     if not e['ok']:
         fields['email'] = e['message']
+    elif User.objects.filter(email__iexact=email).exists():
+        fields['email'] = ("We couldn't register this email. If you already have an account, "
+                           "log in instead.")
     p = check_password(password, username, email)
     if not p['ok']:
         fields['password'] = ' '.join(p['messages'])

@@ -97,6 +97,10 @@ class Command(BaseCommand):
                             help='Also score this Hugging Face image classifier (repeatable)')
 
     def handle(self, *args, **opts):
+        from detector import model_registry as registry
+        if registry.LOAD_ERRORS and not opts.get('allow_missing'):
+            raise CommandError('These models failed to load: ' + ', '.join(registry.LOAD_ERRORS)
+                               + '. Fix that first, or pass --allow-missing.')
         root = opts['testset']
         files = []
         for label_name, label in (('real', 0), ('fake', 1)):

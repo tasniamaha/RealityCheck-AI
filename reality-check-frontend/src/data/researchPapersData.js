@@ -94,7 +94,7 @@ export const papers = [
     venue: 'NeurIPS 2018',
     tags: ['Multi-Task', 'Optimisation', 'Ensemble'],
     abstract:
-      "Frames multi-task learning as multi-objective optimisation — theoretical basis for Reality Check's ensemble cross-validation and signal weighting strategy.",
+      "Frames multi-task learning as multi-objective optimisation — theoretical basis for Reality Check's approach to combining several detectors.",
     url: 'https://arxiv.org/abs/1810.04650',
     color: 'purple',
   },
@@ -191,7 +191,6 @@ export const methodologyPhases = [
 // Note: icon components are imported here so the data file stays self-contained.
 export const economicStats = [
   { icon: DollarSign, value: '$78B',   label: 'Estimated global cost of deepfake fraud by 2027',        color: 'text-cyan-400'   },
-  { icon: BarChart2,  value: '900%',   label: 'Rise in deepfake incidents since 2019',                   color: 'text-purple-400' },
   { icon: Globe,      value: '38+',    label: 'Countries reporting AI-driven disinformation campaigns',  color: 'text-cyan-400'   },
   { icon: TrendingUp, value: '$14.4B', label: 'Projected market for deepfake detection tools by 2030',   color: 'text-purple-400' },
 ];

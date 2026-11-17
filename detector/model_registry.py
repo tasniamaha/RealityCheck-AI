@@ -123,11 +123,22 @@ def find_fake_index(id2label):
     return None
 
 
+def _revisions():
+    import json
+    path = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'weights', 'hf_revisions.json')
+    try:
+        with open(path, encoding='utf-8') as fh:
+            return json.load(fh)
+    except (OSError, ValueError):
+        return {}
+
+
 def load_hf_detector(name: str):
     """Load any 2-class Hugging Face image classifier. Returns (model, processor, fake_index)."""
     from transformers import AutoImageProcessor, AutoModelForImageClassification
-    model = AutoModelForImageClassification.from_pretrained(name).to(DEVICE).eval()
-    processor = AutoImageProcessor.from_pretrained(name)
+    revision = _revisions().get(name)          # pinned by pin_models.py, if present
+    model = AutoModelForImageClassification.from_pretrained(name, revision=revision).to(DEVICE).eval()
+    processor = AutoImageProcessor.from_pretrained(name, revision=revision)
     labels = model.config.id2label
     fake_index = find_fake_index(labels)
     if len(labels) != 2 or fake_index is None:

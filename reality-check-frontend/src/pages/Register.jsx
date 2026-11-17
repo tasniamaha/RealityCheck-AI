@@ -53,13 +53,13 @@ export default function Register() {
     setError('');
   };
 
-  // Ask the server while the user types: is the username free, is the email new,
+  // Ask the server while the user types: is the username free and the password strong
+  // enough. The email is checked when you submit, so the form never reveals who has an account.
   // is the password strong enough (the same rules the server enforces).
   const emailLooksRight = EMAIL_RE.test(form.email.trim());
   const { result, checking } = useFieldCheck({
     mode: 'register',
     username: form.username.trim() || undefined,
-    email: emailLooksRight ? form.email.trim() : undefined,
     password: form.password || undefined,
   });
 
@@ -84,9 +84,7 @@ export default function Register() {
     if (!touched.email) return { state: null };
     if (!form.email.trim()) return { state: false, msg: 'Enter your email.' };
     if (!emailLooksRight) return { state: false, msg: 'This does not look like an email address.' };
-    const r = result.email;
-    if (!r) return { state: null, msg: '' };
-    return { state: r.ok, msg: r.message };
+    return { state: true, msg: '' };
   })();
 
   const password = (() => {

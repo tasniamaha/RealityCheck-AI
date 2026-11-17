@@ -28,9 +28,9 @@ const MODEL_RESULTS = [
   { name: 'AI-vs-Human',     source: 'public checkpoint',                     auc: 65.7, acc: 64.3 },
   { name: 'OpenFake SwinV2', source: 'public checkpoint, recent generators',  auc: 82.4, acc: 75.6 },
 ];
-// Plain average of all five models; the app never labels a file REAL on its own.
+// Signals rule (OpenFake >= 50 or Xception >= 90); the app never labels a file REAL on its own.
 const APP_LABELS = {
-  fake: { right: 58, unsure: 53, wrong: 0 },
+  fake: { right: 70, unsure: 41, wrong: 0 },
   real: { right: 0, unsure: 102, wrong: 8 },
 };
 
@@ -210,6 +210,46 @@ export default function Methodology() {
                 </dl>
               </div>
             ))}
+          </div>
+
+          <div className="glass rounded-2xl p-8 border border-slate-700/40 mb-6 overflow-x-auto">
+            <h3 className="text-xl font-bold text-white mb-1">How the AI label is decided</h3>
+            <p className="text-slate-400 text-sm mb-4">
+              FAKE when OpenFake (built for AI-generated images) scores 50% or more, or Xception (built for face
+              swaps) scores 90% or more. Otherwise UNCERTAIN, and an expert decides. The other models are shown
+              with their explanations but do not change the label.
+            </p>
+            <p className="text-slate-500 text-sm mb-4">
+              Four more test sets of 100 fakes and 100 real photos each (fakes caught / real photos wrongly flagged):
+            </p>
+            <table className="w-full text-sm min-w-[560px]">
+              <thead>
+                <tr className="text-left text-slate-500 border-b border-slate-700">
+                  <th className="py-3 pr-4 font-mono text-xs tracking-widest">RULE</th>
+                  <th className="py-3 pr-4 font-mono text-xs tracking-widest">AI IMAGES (OPENFAKE)</th>
+                  <th className="py-3 pr-4 font-mono text-xs tracking-widest">AI IMAGES (DEEPFAKEFACE)</th>
+                  <th className="py-3 pr-4 font-mono text-xs tracking-widest">FACE SWAPS (TUNING)</th>
+                  <th className="py-3 font-mono text-xs tracking-widest">FACE SWAPS (HELD BACK)</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr className="border-b border-slate-800">
+                  <td className="py-3 pr-4 text-white font-semibold">OpenFake or Xception (used)</td>
+                  <td className="py-3 pr-4 font-mono">100 / 2</td><td className="py-3 pr-4 font-mono">94 / 11</td>
+                  <td className="py-3 pr-4 font-mono">27 / 8</td><td className="py-3 font-mono">25 / 5</td>
+                </tr>
+                <tr>
+                  <td className="py-3 pr-4 text-slate-400">Average of all five</td>
+                  <td className="py-3 pr-4 font-mono">87 / 5</td><td className="py-3 pr-4 font-mono">92 / 3</td>
+                  <td className="py-3 pr-4 font-mono">13 / 13</td><td className="py-3 font-mono">19 / 7</td>
+                </tr>
+              </tbody>
+            </table>
+            <p className="text-slate-500 text-xs mt-4">
+              The 90% Xception line was chosen after seeing these results, so the held-back face-swap set is the
+              fair comparison. Face swaps remain the weakest area: most still go to an expert. These sets contain
+              photos only; screenshots, memes and infographics were not tested.
+            </p>
           </div>
 
           <div className="glass rounded-2xl p-8 border border-slate-700/40 text-sm text-slate-400 leading-relaxed space-y-3">

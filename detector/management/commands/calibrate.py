@@ -85,6 +85,9 @@ class Command(BaseCommand):
 
         enabled = [name for name, _ in det.active_runners()]
         models = [m for m in enabled if SHORT.get(m) in rows[0]]
+        absent = [SHORT.get(m, m) for m, _ in det.MODEL_RUNNERS if SHORT.get(m) not in rows[0]]
+        if absent and not opts['force']:
+            raise CommandError(f'{", ".join(absent)} has no scores in {path}. Re-run evaluate first.')
         if not models:
             raise CommandError('The CSV has no columns for the enabled models. Re-run evaluate.')
 

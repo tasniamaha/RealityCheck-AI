@@ -198,12 +198,16 @@ def crop_face(image: Image.Image, margin: float = FACE_MARGIN) -> Optional[Image
 
 # -- Per-model runners --
 
+# Logit temperature per model, from the model cards (OpenFake: 2.0).
+TEMPERATURE = {'OpenFake (SwinV2)': 2.0}
+
+
 def _run_hf(name, model, processor, fake_index, image):
     if model is None:
         return _unavailable(name, 'ERROR', 'Model not loaded')
     inputs = processor(images=image, return_tensors='pt').to(DEVICE)
     with torch.no_grad():
-        logits = model(**inputs).logits
+        logits = model(**inputs).logits / TEMPERATURE.get(name, 1.0)
     probs = F.softmax(logits, dim=1).squeeze().tolist()
     return _result(name, probs[fake_index])
 
@@ -280,9 +284,17 @@ def run_all_models(image: Image.Image) -> List[Dict[str, Any]]:
     return results
 
 
-# The combined AI label never says REAL by itself. A low score means the detectors
-# found nothing, not that the file is genuine: it goes to an expert as UNCERTAIN.
+# How the AI label is decided (settings.ENSEMBLE_RULE):
+#   'signals' (default): FAKE when OpenFake >= 50 (AI-generated image) or Xception >= 90
+#                        (face swap); otherwise UNCERTAIN. The other models are shown
+#                        but do not change the label.
+#   'average':           FAKE when the average of all models is >= 50.
+# The AI never says REAL on its own: that is left to the expert.
 AUTO_REAL = False
+SIGNALS = [
+    ('OPENFAKE_NAME', 50.0, 'AI-generated signal (OpenFake)'),
+    ('XCEPTION_NAME', 90.0, 'Face-swap signal (Xception)'),
+]
 
 
 def _no_auto_real(result):
@@ -292,7 +304,23 @@ def _no_auto_real(result):
 
 
 def compute_ensemble(results: List[Dict]) -> Dict[str, Any]:
-    return _no_auto_real(_compute_ensemble(results))
+    from django.conf import settings
+    ens = _compute_ensemble(results)
+    scores = {r['model_name']: r.get('fake_prob') for r in results}
+    signals = []
+    for const, cutoff, label in SIGNALS:
+        name = globals().get(const)
+        score = scores.get(name) if name else None
+        if score is not None:
+            signals.append({'name': label, 'score': score, 'cutoff': cutoff, 'on': score >= cutoff})
+    ens['signals'] = signals
+    ens['models_failed'] = [r['model_name'] for r in results if r.get('verdict') == 'ERROR']
+    if getattr(settings, 'ENSEMBLE_RULE', 'signals') == 'signals' and ens.get('verdict') != 'ERROR':
+        ens['average_verdict'] = ens['verdict']
+        ens['verdict'] = 'FAKE' if any(s['on'] for s in signals) else 'UNCERTAIN'
+        ens['method'] = 'signals'
+        ens['model_name'] = 'Signals (OpenFake >= 50 or Xception >= 90)'
+    return _no_auto_real(ens)
 
 
 def _compute_ensemble(results: List[Dict]) -> Dict[str, Any]:

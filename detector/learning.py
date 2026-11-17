@@ -224,6 +224,9 @@ def maybe_start(force=False):
     status = _update_status(progress=_progress(info))
     if not info['ready'] or _RUN_LOCK.locked():
         return False
+    from django.conf import settings
+    if not force and not getattr(settings, 'LEARNING_AUTO_RUN', False):
+        return False          # run it from the admin dashboard or `python manage.py learn`
     n = sum(len(g['ids']) for g in info['qualifying']) + len(info['reals'])
     if not force and n - status.get('last_run_reviews', 0) < RETRAIN_EVERY:
         return False
@@ -397,7 +400,11 @@ def run(log=print):
             np.savez(_path('expert_detector.npz.tmp.npz'), mean=head['mean'], std=head['std'],
                      weights=head['weights'], bias=np.array(head['bias']), backbone=np.array(backbone_key))
             os.replace(_path('expert_detector.npz.tmp.npz'), _path('expert_detector.npz'))
-            _write_json('calibration.json', candidate_cal)
+            from django.conf import settings
+            if getattr(settings, 'LEARNING_UPDATES_CALIBRATION', False):
+                _write_json('calibration.json', candidate_cal)
+            else:
+                _write_json('calibration.proposed.json', candidate_cal)   # an admin decides
             head['backbone'] = backbone_key
             head['meta'] = summary
             registry.EXPERT_HEAD = head

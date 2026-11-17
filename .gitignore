@@ -13,3 +13,5 @@ db.sqlite3
 weights/testset_scores.json
 weights/learning_status.json
 weights/*.tmp
+weights/calibration.json
+weights/calibration.proposed.json

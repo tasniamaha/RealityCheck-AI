@@ -27,8 +27,9 @@ export default function Login() {
   const { login } = useAuth();
   const navigate  = useNavigate();
 
-  // Tells the user straight away whether the username exists.
-  const { result, checking } = useFieldCheck({ mode: 'login', username: username.trim() });
+  // No live username check: the login form never reveals whether an account exists.
+  const result = {};
+  const checking = false;
   const userCheck = username.trim() ? result.username : null;
 
   const usernameError = fields.username || (userCheck && !userCheck.ok ? userCheck.message : '');

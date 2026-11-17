@@ -92,7 +92,7 @@ SHORT = {name: info['short'] for name, info in MODEL_INFO.items()}
 # -- How sure the model is -------------------------------------------------------
 
 def strength(prob):
-    """Plain words for a 0-100 fake score. Matches the app's labels (FAKE from 50, REAL below 20)."""
+    """Plain words for a 0-100 fake score. A low score only means nothing was found."""
     if prob >= 85:
         return 'fake', 'is very sure this is fake'
     if prob >= 65:
@@ -100,10 +100,10 @@ def strength(prob):
     if prob >= det.FAKE_FROM:
         return 'fake', 'leans towards fake, but only a little'
     if prob >= det.REAL_BELOW:
-        return 'real', 'cannot decide; it leans slightly towards real'
+        return 'low', 'is unsure; its score is below the fake line'
     if prob >= 10:
-        return 'real', 'is fairly sure this is real'
-    return 'real', 'is very sure this is real'
+        return 'low', 'found few signs of faking'
+    return 'low', 'found no signs of faking'
 
 
 # -- Where is the face? ----------------------------------------------------------
@@ -209,11 +209,11 @@ def _occlusion(image, score_batch, explain_fake, grid=6):
     return np.clip(cam, 0, None)
 
 
-def _hf_batch(model, processor, fake):
+def _hf_batch(model, processor, fake, temperature=1.0):
     def score(images):
         with torch.no_grad():
             inputs = processor(images=images, return_tensors='pt').to(det.DEVICE)
-            probs = torch.softmax(model(**inputs).logits, dim=1)[:, fake]
+            probs = torch.softmax(model(**inputs).logits / temperature, dim=1)[:, fake]
         return probs.cpu().tolist()
     return score
 
@@ -235,7 +235,7 @@ def _cam_openfake(image, explain_fake):
     small = image.copy()
     small.thumbnail((512, 512))
     return _occlusion(small, _hf_batch(model, registry.OPENFAKE_PROCESSOR,
-                                       registry.OPENFAKE_FAKE_INDEX), explain_fake)
+                                       registry.OPENFAKE_FAKE_INDEX, det.TEMPERATURE.get(det.OPENFAKE_NAME, 1.0)), explain_fake)
 
 
 def _cam_xception(image, explain_fake):
@@ -364,7 +364,7 @@ def build_heatmap(scan, model_name, explain_fake):
         cam = None if cam is None else _normalise(cam)
         if cam is None:
             return None, None
-        side = 'fake' if explain_fake else 'real'
+        side = 'fake' if explain_fake else 'low'
         return _overlay(image, cam), describe_regions(image, cam, face_box(image), side)
     except Exception as e:
         print(f'[explain] heatmap failed for {model_name}: {e}')
@@ -400,38 +400,37 @@ def build_explanation(scan, model_name, region=None, has_heatmap=False):
         if found:
             reasons.append(f'The fake reasons it learned from experts: {found}.')
 
+    push = 'pushed its score up' if side == 'fake' else 'pushed its score down'
     if region:
-        reasons.append(f'What pushed it towards {side} was mostly {region}.')
+        reasons.append(f'What {push} was mostly {region}.')
     elif has_heatmap:
-        reasons.append(f'The heatmap marks the areas that pushed it towards {side}.')
+        reasons.append(f'The heatmap marks the areas that {push}.')
 
     enabled = {name for name, _ in det.active_runners()}
-    mine = det._verdict(prob)
-    agree, unsure, disagree = [], [], []
-    for other_name, field in SCORE_FIELD.items():
-        other = getattr(scan, field, None)
-        if other_name == model_name or other is None or other_name not in enabled:
-            continue
-        theirs = det._verdict(other)
-        item = f'{SHORT.get(other_name, other_name)} {other:.0f}%'
-        if theirs == mine:
-            agree.append(item)
-        elif 'UNCERTAIN' in (theirs, mine):
-            unsure.append(item)
-        else:
-            disagree.append(item)
-    parts = []
-    if agree:
-        parts.append(f'agree: {", ".join(agree)}')
-    if unsure:
-        parts.append(f'undecided: {", ".join(unsure)}')
-    if disagree:
-        parts.append(f'say the opposite: {", ".join(disagree)}')
-    if parts:
-        reasons.append('Other models (labels: FAKE from 50%, REAL below 20%, UNCERTAIN in between) - '
-                       + '; '.join(parts) + '.')
-    if disagree:
-        reasons.append('Because some models say the opposite, treat this opinion with care.')
+    if model_name == det.XCEPTION_NAME:
+        reasons.append('Xception looks only at the face, for blending seams left by a face swap. The other '
+                       'models look at the whole picture for signs of AI generation, so they are not '
+                       'expected to spot face swaps.')
+    else:
+        high, middle, low = [], [], []
+        for other_name, field in SCORE_FIELD.items():
+            other = getattr(scan, field, None)
+            if (other_name in (model_name, det.XCEPTION_NAME) or other is None
+                    or other_name not in enabled):
+                continue
+            item = f'{SHORT.get(other_name, other_name)} {other:.0f}%'
+            (high if other >= det.FAKE_FROM else low if other < det.REAL_BELOW else middle).append(item)
+        parts = []
+        if high:
+            parts.append(f'high: {", ".join(high)}')
+        if middle:
+            parts.append(f'in between: {", ".join(middle)}')
+        if low:
+            parts.append(f'low: {", ".join(low)}')
+        if parts:
+            reasons.append('The other whole-picture models scored it ' + '; '.join(parts) + '.')
+        if (prob >= det.FAKE_FROM and low and not high) or (prob < det.REAL_BELOW and high and not low):
+            reasons.append('Models that check the same thing disagree here, so treat this opinion with care.')
 
     reliability = []
     if info['accuracy'] is not None:
@@ -442,7 +441,7 @@ def build_explanation(scan, model_name, region=None, has_heatmap=False):
 
     caption = None
     if has_heatmap:
-        caption = (f'Red and yellow mark the areas that pushed {short} towards {side}; blue areas '
+        caption = (f'Red and yellow mark the areas that {push} for {short}; blue areas '
                    f'mattered little. It shows where the model looked, not a proof of editing.')
 
     return {

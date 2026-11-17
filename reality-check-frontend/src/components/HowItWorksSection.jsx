@@ -6,7 +6,7 @@ const timelineSteps = [
   { icon: Upload,      title: 'Upload',            desc: 'Submit Image or Video' },
   { icon: Eye,         title: 'Preprocess',         desc: 'Frame Extraction & Normalization' },
   { icon: Zap,         title: 'AI Analysis',        desc: 'Multi-Model Deepfake Detection' },
-  { icon: Users,       title: 'Model Comparison',   desc: 'Cross-Validation of Results' },
+  { icon: Users,       title: 'Model Comparison',   desc: 'Combining the models' },
   { icon: CheckCircle, title: 'Authenticity Score', desc: 'Confidence Metrics Generated' },
   { icon: Shield,      title: 'Expert Verdict',     desc: 'Human Expert Final Decision' },
 ];

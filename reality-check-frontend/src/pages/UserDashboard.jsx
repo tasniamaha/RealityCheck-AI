@@ -304,7 +304,7 @@ export default function UserDashboard() {
     try {
       const data = await addNewCase(file);
       setResults(data.model_results);
-      setAiSummary({ label: data.ai_label, prob: data.ensemble?.fake_prob, method: data.ensemble?.method, provenance: data.provenance });
+      setAiSummary({ label: data.ai_label, prob: data.ensemble?.fake_prob, method: data.ensemble?.method, provenance: data.provenance, signals: data.ensemble?.signals || [], failed: data.ensemble?.models_failed || [] });
       setScanId(data.scan_id);
       startPolling(data.scan_id);
       generateVoices(data.model_results, data.scan_id);
@@ -415,7 +415,7 @@ export default function UserDashboard() {
                   { icon: '', step: '01', title: 'Upload Media',           color: '#22d3ee', desc: 'Drop any image or video file into the terminal. Supported formats: JPG, PNG, MP4, MOV. Your file is sent securely to the analysis backend.' },
                   { icon: '', step: '02', title: 'Preprocessing',          color: '#a855f7', desc: 'Frames are extracted and normalised. For video, key frames are sampled at regular intervals to ensure comprehensive coverage.' },
                   { icon: '', step: '03', title: 'Multi-Model AI Analysis', color: '#a855f7', desc: 'Five detection models (SigLIP, Xception, EfficientNet-B0, AI-vs-Human and OpenFake) each give the file a fake-probability score. The scores are shown separately.' },
-                  { icon: '', step: '04', title: 'Cross-Validation',        color: '#10b981', desc: 'The scores are combined, weighted by how accurate each model was on our test set. When the models disagree, the result is marked low confidence.' },
+                  { icon: '', step: '04', title: 'Combining the models',        color: '#10b981', desc: 'The AI label is FAKE when OpenFake (AI-generated images) scores 50% or more, or Xception (face swaps) scores 90% or more. Otherwise the file is UNCERTAIN. The AI never marks a file REAL; the average of all models is shown for reference.' },
                   { icon: '', step: '05', title: 'Authenticity Score',      color: '#fbbf24', desc: 'The average gives a provisional REAL / FAKE / UNCERTAIN label, with a heatmap per model showing where it looked.' },
                   { icon: '', step: '06', title: 'Expert Review',          color: '#f87171', desc: 'A human expert reviews the scan and makes the final decision. The AI label is provisional until then.' },
                 ].map((s, i) => (
@@ -568,7 +568,22 @@ export default function UserDashboard() {
                     {aiSummary.prob != null && (
                       <p className="text-slate-400 text-sm">
                         Detectors' combined fake score: <span className="text-white font-mono">{aiSummary.prob.toFixed(1)}%</span>
-                        {' '}({aiSummary.method === 'calibrated' ? 'weighted by measured accuracy' : 'average of the models'})
+                        {' '}(average of all models, for reference)
+                      </p>
+                    )}
+                    {aiSummary.signals?.length > 0 && (
+                      <ul className="space-y-1 text-sm">
+                        {aiSummary.signals.map(s => (
+                          <li key={s.name} className={s.on ? 'text-red-300' : 'text-slate-400'}>
+                            {s.name}: <span className="font-mono">{s.score.toFixed(1)}%</span>
+                            {' '}(flags FAKE from {s.cutoff}%){s.on ? ' - flagged' : ''}
+                          </li>
+                        ))}
+                      </ul>
+                    )}
+                    {aiSummary.failed?.length > 0 && (
+                      <p className="text-sm text-amber-300">
+                        Not checked: {aiSummary.failed.join(', ')} could not run, so the label is based on the other models.
                       </p>
                     )}
                     {aiSummary.provenance && aiSummary.provenance.note && (
