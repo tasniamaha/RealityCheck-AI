@@ -291,28 +291,48 @@ def compute_ensemble(results: List[Dict]) -> Dict[str, Any]:
         return {'model_name': 'Ensemble', 'verdict': 'ERROR', 'method': 'none',
                 'fake_prob': None, 'real_prob': None, 'models_used': 0}
 
+    scores = {r['model_name']: r['fake_prob'] for r in valid}
     cal = calibration.load()
     if cal:
-        prob = calibration.predict(cal, {r['model_name']: r['fake_prob'] for r in valid})
-        if prob is not None:
-            return {
-                'model_name':  'Ensemble (calibrated)',
-                'method':      'calibrated',
-                'fake_prob':   prob,
-                'real_prob':   round(100 - prob, 2),
-                'verdict':     calibration.verdict(cal, prob),
-                'models_used': len(valid),
-            }
+        # Calibration only knows the models it was fitted on. If a fixed model that scored
+        # this file is not among them, using it would silently drop that model's opinion.
+        fixed = {name for name, _ in MODEL_RUNNERS}
+        missing = sorted(n for n in scores if n in fixed and n not in cal['models'])
+        if not missing:
+            prob = calibration.predict(cal, scores)
+            if prob is not None:
+                used = [n for n in cal['models'] if scores.get(n) is not None]
+                return {
+                    'model_name':  'Ensemble (calibrated)',
+                    'method':      'calibrated',
+                    'fake_prob':   prob,
+                    'real_prob':   round(100 - prob, 2),
+                    'verdict':     calibration.verdict(cal, prob),
+                    'models_used': len(used),
+                }
+        else:
+            _warn_stale(missing)
 
-    avg = round(sum(r['fake_prob'] for r in valid) / len(valid), 2)
+    avg = round(sum(scores.values()) / len(scores), 2)
     return {
         'model_name':  'Ensemble (average)',
-        'method':      'average',
+        'method':      'average' if not cal else 'average (calibration out of date)',
         'fake_prob':   avg,
         'real_prob':   round(100 - avg, 2),
         'verdict':     _verdict(avg),
-        'models_used': len(valid),
+        'models_used': len(scores),
     }
+
+
+_WARNED = set()
+
+
+def _warn_stale(missing):
+    key = tuple(missing)
+    if key not in _WARNED:
+        _WARNED.add(key)
+        print(f'[Ensemble] WARNING: weights/calibration.json does not include {", ".join(missing)}. '
+              f'Using the plain average of all models. Run: python manage.py calibrate')
 
 
 def analyze_image(image: Image.Image, filename=None) -> Dict[str, Any]:
