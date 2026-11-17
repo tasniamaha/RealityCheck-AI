@@ -22,6 +22,17 @@ DEVICE = registry.DEVICE
 SIGLIP_NAME       = 'SigLIP (HuggingFace)'
 XCEPTION_NAME     = 'Xception-FaceForensics'
 EFFICIENTNET_NAME = 'EfficientNet-B0 (Custom)'
+AIHUMAN_NAME      = 'AI-vs-Human (SigLIP)'
+EXPERT_NAME       = 'Expert-trained (from reviews)'
+
+# Which ScanResult column stores each model's score.
+SCORE_FIELDS = {
+    SIGLIP_NAME:       'siglip_prob',
+    XCEPTION_NAME:     'xception_prob',
+    EFFICIENTNET_NAME: 'efficientnet_prob',
+    AIHUMAN_NAME:      'aihuman_prob',
+    EXPERT_NAME:       'expert_prob',
+}
 
 # Xception preprocessing (only used when model_registry.XCEPTION_ENABLED is True).
 XCEPTION_INPUT_SIZE = 150
@@ -124,15 +135,24 @@ def crop_face(image: Image.Image, margin: float = FACE_MARGIN) -> Optional[Image
 
 # -- Per-model runners --
 
-def run_siglip(image: Image.Image) -> Dict[str, Any]:
-    if registry.SIGLIP_MODEL is None:
-        return _unavailable(SIGLIP_NAME, 'ERROR', 'Model not loaded')
-
-    inputs = registry.SIGLIP_PROCESSOR(images=image, return_tensors='pt').to(DEVICE)
+def _run_hf(name, model, processor, fake_index, image):
+    if model is None:
+        return _unavailable(name, 'ERROR', 'Model not loaded')
+    inputs = processor(images=image, return_tensors='pt').to(DEVICE)
     with torch.no_grad():
-        logits = registry.SIGLIP_MODEL(**inputs).logits
+        logits = model(**inputs).logits
     probs = F.softmax(logits, dim=1).squeeze().tolist()
-    return _result(SIGLIP_NAME, probs[registry.SIGLIP_FAKE_INDEX])
+    return _result(name, probs[fake_index])
+
+
+def run_siglip(image: Image.Image) -> Dict[str, Any]:
+    return _run_hf(SIGLIP_NAME, registry.SIGLIP_MODEL, registry.SIGLIP_PROCESSOR,
+                   registry.SIGLIP_FAKE_INDEX, image)
+
+
+def run_aihuman(image: Image.Image) -> Dict[str, Any]:
+    return _run_hf(AIHUMAN_NAME, registry.AIHUMAN_MODEL, registry.AIHUMAN_PROCESSOR,
+                   registry.AIHUMAN_FAKE_INDEX, image)
 
 
 def run_xception(image: Image.Image, transform=None) -> Dict[str, Any]:
@@ -159,17 +179,31 @@ def run_efficientnet(image: Image.Image) -> Dict[str, Any]:
     return _result(EFFICIENTNET_NAME, prob[1])   # index 1 = fake
 
 
-# Xception only runs when model_registry.XCEPTION_ENABLED is True.
+def run_expert(image: Image.Image) -> Dict[str, Any]:
+    from detector import learning
+    return learning.run_expert(image)
+
+
+# The fixed detectors. Xception only runs when model_registry.XCEPTION_ENABLED is True.
 MODEL_RUNNERS = [(SIGLIP_NAME, run_siglip)]
 if registry.XCEPTION_ENABLED:
     MODEL_RUNNERS.append((XCEPTION_NAME, run_xception))
 MODEL_RUNNERS.append((EFFICIENTNET_NAME, run_efficientnet))
+MODEL_RUNNERS.append((AIHUMAN_NAME, run_aihuman))
+
+
+def active_runners():
+    """The fixed detectors plus the expert-trained one, once experts have taught it."""
+    runners = list(MODEL_RUNNERS)
+    if registry.EXPERT_HEAD is not None:
+        runners.append((EXPERT_NAME, run_expert))
+    return runners
 
 
 def run_all_models(image: Image.Image) -> List[Dict[str, Any]]:
     image = image.convert('RGB')
     results = []
-    for name, runner in MODEL_RUNNERS:
+    for name, runner in active_runners():
         try:
             results.append(runner(image))
         except Exception as e:
@@ -178,13 +212,33 @@ def run_all_models(image: Image.Image) -> List[Dict[str, Any]]:
 
 
 def compute_ensemble(results: List[Dict]) -> Dict[str, Any]:
+    """
+    Combine the model scores. Uses weights/calibration.json (from `manage.py calibrate`)
+    when it exists, otherwise a plain average with the REAL_BELOW / FAKE_FROM bands.
+    """
+    from detector import calibration
     valid = [r for r in results if r.get('fake_prob') is not None]
     if not valid:
-        return {'model_name': 'Ensemble (Average)', 'verdict': 'ERROR',
+        return {'model_name': 'Ensemble', 'verdict': 'ERROR', 'method': 'none',
                 'fake_prob': None, 'real_prob': None, 'models_used': 0}
+
+    cal = calibration.load()
+    if cal:
+        prob = calibration.predict(cal, {r['model_name']: r['fake_prob'] for r in valid})
+        if prob is not None:
+            return {
+                'model_name':  'Ensemble (calibrated)',
+                'method':      'calibrated',
+                'fake_prob':   prob,
+                'real_prob':   round(100 - prob, 2),
+                'verdict':     calibration.verdict(cal, prob),
+                'models_used': len(valid),
+            }
+
     avg = round(sum(r['fake_prob'] for r in valid) / len(valid), 2)
     return {
-        'model_name':  'Ensemble (Average)',
+        'model_name':  'Ensemble (average)',
+        'method':      'average',
         'fake_prob':   avg,
         'real_prob':   round(100 - avg, 2),
         'verdict':     _verdict(avg),

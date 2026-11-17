@@ -79,7 +79,7 @@ export default function ExpertRegister() {
       }
 
       // Success — application submitted, pending admin approval
-      alert('✅ Application submitted! Your account is active but expert access is pending admin approval.');
+      alert(' Application submitted! Your account is active but expert access is pending admin approval.');
       navigate('/user-dashboard');
     } catch (err) {
       setError(err.message || 'Network error. Make sure the server is running.');
@@ -91,8 +91,8 @@ export default function ExpertRegister() {
 
   return (
     <div className="min-h-screen bg-black text-white overflow-hidden relative flex items-center justify-center">
-      <div className="absolute inset-0 bg-[radial-gradient(#22d3ee_0.7px,transparent_1px)] bg-[length:50px_50px] opacity-10"></div>
-      <div className="absolute inset-0 bg-gradient-to-br from-black via-slate-950 to-black"></div>
+      <div className="absolute inset-0   opacity-10"></div>
+      <div className="absolute inset-0 bg-black "></div>
       <motion.div animate={{ scale:[1,1.08,1] }} transition={{ duration:12, repeat:Infinity }}
         className="absolute top-20 left-20 w-96 h-96 bg-cyan-500/10 rounded-full blur-3xl" />
       <motion.div animate={{ scale:[1,1.12,1] }} transition={{ duration:15, repeat:Infinity, delay:4 }}
@@ -105,7 +105,7 @@ export default function ExpertRegister() {
             <div className="flex items-center gap-4">
               <Shield className="w-12 h-12 text-cyan-400" />
               <h1 className="text-5xl font-bold tracking-tighter">
-                BECOME A<span className="text-cyan-400"> VERIFIER</span>
+                Apply as an expert
               </h1>
             </div>
           </div>

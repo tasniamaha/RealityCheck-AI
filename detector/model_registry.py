@@ -1,7 +1,7 @@
 """
 model_registry.py
 ------------------
-Loads all three detection models ONCE when Django starts.
+Loads the detection models ONCE when Django starts.
 Never call load_all_models() inside a request - only from apps.py ready().
 
 A model that fails to load is left as None, so it is reported as an error
@@ -20,12 +20,20 @@ SIGLIP_PROCESSOR   = None
 SIGLIP_FAKE_INDEX  = 0
 XCEPTION_MODEL     = None
 EFFICIENTNET_MODEL = None
+AIHUMAN_MODEL      = None
+AIHUMAN_PROCESSOR  = None
+AIHUMAN_FAKE_INDEX = 0
+EXPERT_HEAD        = None   # set by detector.learning once experts have taught it
 MODELS_LOADED      = False
 LOAD_ERRORS        = {}
 
 # The Hugging Face detector in the "SigLIP" slot. Override it by adding
 # HF_DETECTOR_MODEL = '<model id>' to settings.py after `evaluate --candidate` shows a better one.
 DEFAULT_HF_DETECTOR = 'prithivMLmods/deepfake-detector-model-v1'
+
+# Third model: a SigLIP classifier fine-tuned on 60k AI-generated vs 60k human images
+# (labels 'ai' / 'hum'). Override with THIRD_HF_DETECTOR_MODEL = '<model id>' in settings.py.
+DEFAULT_THIRD_HF_DETECTOR = 'Ateeqq/ai-vs-human-image-detector'
 
 # Off: in evaluation Xception ranked below chance on AI-generated images
 # (the checkpoint looks like a face-swap video model). Set True to load and use it again.
@@ -128,6 +136,7 @@ def _load_siglip():
 def load_all_models():
     global SIGLIP_MODEL, SIGLIP_PROCESSOR, SIGLIP_FAKE_INDEX
     global XCEPTION_MODEL, EFFICIENTNET_MODEL, MODELS_LOADED
+    global AIHUMAN_MODEL, AIHUMAN_PROCESSOR, AIHUMAN_FAKE_INDEX
 
     if MODELS_LOADED:
         return
@@ -164,7 +173,20 @@ def load_all_models():
         LOAD_ERRORS['efficientnet'] = str(e)
         print(f'[ModelRegistry] FAILED EfficientNet failed: {e}')
 
+    third = getattr(settings, 'THIRD_HF_DETECTOR_MODEL', DEFAULT_THIRD_HF_DETECTOR)
+    print(f'[ModelRegistry] Loading AI-vs-Human detector ({third})...')
+    try:
+        AIHUMAN_MODEL, AIHUMAN_PROCESSOR, AIHUMAN_FAKE_INDEX = load_hf_detector(third)
+        print(f'[ModelRegistry] OK AI-vs-Human ready (fake index = {AIHUMAN_FAKE_INDEX}).')
+    except Exception as e:
+        AIHUMAN_MODEL = AIHUMAN_PROCESSOR = None
+        LOAD_ERRORS['aihuman'] = str(e)
+        print(f'[ModelRegistry] FAILED AI-vs-Human failed: {e}')
+
+    from detector import learning
+    learning.load_head()
+
     MODELS_LOADED = True
-    loaded = sum(m is not None for m in (SIGLIP_MODEL, XCEPTION_MODEL, EFFICIENTNET_MODEL))
-    wanted = 3 if XCEPTION_ENABLED else 2
+    loaded = sum(m is not None for m in (SIGLIP_MODEL, XCEPTION_MODEL, EFFICIENTNET_MODEL, AIHUMAN_MODEL))
+    wanted = 4 if XCEPTION_ENABLED else 3
     print(f'[ModelRegistry] {loaded}/{wanted} models loaded. Running on: {DEVICE.upper()}')

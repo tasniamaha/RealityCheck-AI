@@ -1,11 +1,11 @@
 import { useState } from 'react';
+import Logo from '../components/Logo';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { motion } from 'framer-motion';
 import { Shield, ArrowRight } from 'lucide-react';
 import ScrollToTopButton from '../components/ScrollToTopButton';
 import { Link } from 'react-router-dom';
-import logo from '../assets/logo/logo-removebg.png';
 
 export default function Login() {
   const [username,  setUsername]  = useState('');
@@ -37,12 +37,12 @@ export default function Login() {
 
   return (
     <div className="min-h-screen bg-black text-white overflow-hidden relative flex items-center justify-center">
-      <div className="absolute inset-0 bg-[radial-gradient(#22d3ee_0.7px,transparent_1px)] bg-[length:50px_50px] opacity-20 animate-grid"></div>
+      <div className="absolute inset-0   opacity-20 animate-grid"></div>
 
       <motion.div
         animate={{ backgroundPosition: ['0% 50%', '100% 50%', '0% 50%'] }}
         transition={{ duration: 25, repeat: Infinity, ease: "linear" }}
-        className="absolute inset-0 bg-gradient-to-br from-cyan-900/30 via-purple-900/30 to-black bg-[length:400%_400%]"
+        className="absolute inset-0 bg-cyan-900/30 "
       />
       <motion.div
         animate={{ x: [0, 80, -60, 0], y: [0, -70, 90, 0], scale: [1, 1.15, 0.95, 1] }}
@@ -63,17 +63,7 @@ export default function Login() {
       >
         <div className="flex justify-center mb-8">
           <div className="flex items-center gap-3">
-           <div className="flex items-center gap-4">
-  <img
-    src={logo}
-    alt="Reality Check Logo"
-    className="w-16 h-16 object-contain"
-  />
-
-  <h1 className="text-5xl font-bold tracking-tighter">
-    REALITY CHECK
-  </h1>
-</div>
+           <Logo size={56} to={null} />
           </div>
         </div>
 
@@ -114,7 +104,7 @@ export default function Login() {
           whileTap={{ scale: 0.96 }}
           onClick={handleLogin}
           disabled={isLoading}
-          className="w-full py-6 bg-cyan-500 rounded-2xl font-bold text-xl flex items-center justify-center gap-3 relative overflow-hidden group disabled:opacity-70"
+          className="w-full py-6 bg-cyan-500 text-print rounded-2xl font-bold text-xl flex items-center justify-center gap-3 relative overflow-hidden group disabled:opacity-70"
         >
           {isLoading ? (
             <span className="flex items-center gap-3">

@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import LearningPanel from '../components/LearningPanel';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Shield, Users, AlertTriangle, LogOut, RefreshCw, ChevronDown, ChevronUp } from 'lucide-react';
 import { useApp } from '../context/AppContext';
@@ -30,13 +31,13 @@ function ExpertRow({ app, onAction, loading }) {
                 <motion.button whileHover={{ scale: 1.05 }}
                   disabled={loading}
                   onClick={() => onAction(app.id, 'approve')}
-                  className="bg-emerald-600 hover:bg-emerald-500 px-4 py-2 rounded-xl text-xs font-medium transition disabled:opacity-50">
+                  className="bg-emerald-600 text-print hover:bg-emerald-500 px-4 py-2 rounded-xl text-xs font-medium transition disabled:opacity-50">
                   Approve
                 </motion.button>
                 <motion.button whileHover={{ scale: 1.05 }}
                   disabled={loading}
                   onClick={() => onAction(app.id, 'reject')}
-                  className="bg-red-600 hover:bg-red-500 px-4 py-2 rounded-xl text-xs font-medium transition disabled:opacity-50">
+                  className="bg-red-600 text-print hover:bg-red-500 px-4 py-2 rounded-xl text-xs font-medium transition disabled:opacity-50">
                   Reject
                 </motion.button>
               </>
@@ -117,7 +118,7 @@ export default function AdminDashboard() {
     try {
       const data = await updateApplication(id, action);
       setActionMsg(action === 'approve'
-        ? `✅ Approved! ${data.username} now has expert access.`
+        ? ` Approved! ${data.username} now has expert access.`
         : 'Application rejected.');
     } catch (err) {
       setActionMsg(`Error: ${err.message}`);
@@ -131,7 +132,7 @@ export default function AdminDashboard() {
     setComplaintMsg('');
     try {
       await updateComplaint(id, action);
-      setComplaintMsg(action === 'resolved' ? '✅ Complaint marked as resolved.' : 'Complaint dismissed.');
+      setComplaintMsg(action === 'resolved' ? ' Complaint marked as resolved.' : 'Complaint dismissed.');
     } catch (err) {
       setComplaintMsg(`Error: ${err.message}`);
     } finally {
@@ -147,8 +148,8 @@ export default function AdminDashboard() {
 
   return (
     <div className="min-h-screen bg-black text-white overflow-hidden relative">
-      <div className="absolute inset-0 bg-[radial-gradient(#22d3ee_0.8px,transparent_1px)] bg-[length:60px_60px] opacity-10" />
-      <div className="absolute inset-0 bg-gradient-to-br from-black via-slate-950 to-black" />
+      <div className="absolute inset-0   opacity-10" />
+      <div className="absolute inset-0 bg-black " />
 
       <div className="relative z-10 p-8 max-w-7xl mx-auto">
 
@@ -157,7 +158,7 @@ export default function AdminDashboard() {
           <div className="flex items-center gap-4">
             <Shield className="w-11 h-11 text-cyan-400" />
             <h1 className="text-5xl font-bold tracking-tighter">
-              ADMIN<span className="text-cyan-400"> CONTROL</span>
+              Admin
             </h1>
           </div>
           <div className="flex items-center gap-4 flex-wrap">
@@ -183,6 +184,8 @@ export default function AdminDashboard() {
             {actionMsg}
           </div>
         )}
+
+        <LearningPanel />
 
         {/* ── Expert Applications ── */}
         <div className="mb-16">
@@ -272,7 +275,7 @@ export default function AdminDashboard() {
                                 <button
                                   disabled={complaintLoading}
                                   onClick={() => handleComplaintAction(c.id, 'resolved')}
-                                  className="bg-emerald-600 hover:bg-emerald-500 px-4 py-2 rounded-xl text-xs font-medium transition disabled:opacity-50">
+                                  className="bg-emerald-600 text-print hover:bg-emerald-500 px-4 py-2 rounded-xl text-xs font-medium transition disabled:opacity-50">
                                   Resolve
                                 </button>
                                 <button

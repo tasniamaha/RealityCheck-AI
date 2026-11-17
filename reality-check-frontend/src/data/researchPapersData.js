@@ -133,24 +133,24 @@ export const tagColor = {
     border: 'border-cyan-400/30',
     text: 'text-cyan-400',
     bg: 'bg-cyan-400/8',
-    glow: '0 0 20px rgba(34,211,238,0.08)',
+    glow: '0 0 20px rgba(122,42,184,0.08)',
   },
   purple: {
     border: 'border-purple-400/30',
     text: 'text-purple-400',
     bg: 'bg-purple-400/8',
-    glow: '0 0 20px rgba(192,132,252,0.08)',
+    glow: '0 0 20px rgba(122,42,184,0.08)',
   },
 };
 
 // ─── METHODOLOGY ARCHITECTURE STEPS ──────────────────────────────────────────
 export const architectureSteps = [
-  { id: '01', label: 'Upload',        sub: 'JPG · PNG · MP4 · MOV',          color: '#22d3ee' },
-  { id: '02', label: 'Preprocess',    sub: 'Frame extraction · Normalise',    color: '#818cf8' },
-  { id: '03', label: 'AI Analysis',   sub: 'SigLIP · Xception · EfficientNet', color: '#22d3ee' },
-  { id: '04', label: 'Ensemble',      sub: 'Cross-validate · Weight signals', color: '#818cf8' },
-  { id: '05', label: 'Score',         sub: 'REAL · FAKE · UNCERTAIN',         color: '#22d3ee' },
-  { id: '06', label: 'Expert Verdict',sub: 'Human-certified decision',        color: '#c084fc' },
+  { id: '01', label: 'Upload',        sub: 'JPG · PNG · MP4 · MOV',          color: '#7A2AB8' },
+  { id: '02', label: 'Preprocess',    sub: 'Frame extraction · Normalise',    color: '#7A2AB8' },
+  { id: '03', label: 'AI Analysis',   sub: 'SigLIP · EfficientNet-B0 · AI-vs-Human', color: '#7A2AB8' },
+  { id: '04', label: 'Ensemble',      sub: 'Weighted by measured accuracy', color: '#7A2AB8' },
+  { id: '05', label: 'Score',         sub: 'REAL · FAKE · UNCERTAIN',         color: '#7A2AB8' },
+  { id: '06', label: 'Expert Verdict',sub: 'Human-certified decision',        color: '#7A2AB8' },
 ];
 
 // ─── METHODOLOGY DEVELOPMENT PHASES ──────────────────────────────────────────
@@ -168,12 +168,12 @@ export const methodologyPhases = [
   {
     num: '03',
     title: 'Dataset & Preprocessing',
-    body: 'Benchmark datasets augmented with frame extraction, colour normalisation, resolution standardisation, and duplicate hashing.',
+    body: 'A labelled test set of 221 images: 200 held-out images from the DeepFakeFace dataset (real photos, text-to-image, inpainting and face swaps) and 21 images collected by the team.',
   },
   {
     num: '04',
     title: 'Deep Learning Development',
-    body: 'Transfer learning on SigLIP, Xception, and EfficientNet. Models detect facial blending artefacts, GAN fingerprints, and compression inconsistencies.',
+    body: 'Three detectors are used: two public SigLIP checkpoints and our EfficientNet-B0, re-trained on about 3,000 DeepFakeFace images that are not in the test set. Each gives a fake score from 0 to 100.',
   },
   {
     num: '05',
@@ -183,7 +183,7 @@ export const methodologyPhases = [
   {
     num: '06',
     title: 'Testing, Deployment & Future Work',
-    body: 'Rigorous cross-validation. Recognised at Innovation World Cup 2026. Future roadmap: multimodal detection, robustness under adversarial attacks.',
+    body: 'Every detector is scored on the test set with python manage.py evaluate, and the results are shown on this page, including where the models fail. Next: multimodal detection and robustness to adversarial attacks.',
   },
 ];
 
@@ -206,11 +206,11 @@ export const economicNarrative = [
   {
     color: 'text-purple-400',
     heading: 'Media & Publishing',
-    body: 'News organisations, courts, and social platforms face regulatory and reputational risk from unverified content. Reality Check provides an audit trail that satisfies emerging EU AI Act and UK Online Safety Act requirements.',
+    body: 'News organisations, courts, and social platforms face regulatory and reputational risk from unverified content. Reality Check keeps an audit trail of every scan, model score and expert decision.',
   },
   {
     color: 'text-cyan-400',
     heading: 'Market Opportunity',
-    body: "With the deepfake detection market projected to reach $14.4B by 2030, Reality Check's human-in-the-loop differentiation positions it for enterprise SaaS, government contracts, and forensic licensing.",
+    body: "Reality Check's human-in-the-loop design suits newsrooms, fact-checkers and forensic teams who need a person to sign off on every verdict.",
   },
 ];

@@ -1,8 +1,8 @@
 """
 video_detector.py
 ------------------
-Extracts frames from a video, runs all 3 models on each frame (same code path
-as images), averages per-model scores, then computes the ensemble.
+Extracts frames from a video, runs every enabled model on each frame (same code
+path as images), averages per-model scores, then computes the ensemble.
 """
 
 import cv2
@@ -10,7 +10,7 @@ from PIL import Image
 from typing import Dict, Any, List
 
 from detector.image_detector import (
-    MODEL_RUNNERS, compute_ensemble, _result, _unavailable,
+    active_runners, compute_ensemble, _result, _unavailable,
 )
 
 FRAME_SKIP = 10   # analyze 1 in every 10 frames
@@ -54,7 +54,7 @@ def analyze_video(video_path: str) -> Dict[str, Any]:
         return {'error': 'No frames could be extracted. Check the video file.'}
 
     model_results = []
-    for name, runner in MODEL_RUNNERS:
+    for name, runner in active_runners():
         try:
             model_results.append(_run_on_frames(name, runner, frames))
         except Exception as e:

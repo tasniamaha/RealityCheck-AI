@@ -36,15 +36,15 @@ export default function ExpertDashboard() {
 
   return (
     <div className="min-h-screen bg-black text-white overflow-hidden relative">
-      <div className="absolute inset-0 bg-[radial-gradient(#22d3ee_0.8px,transparent_1px)] bg-[length:60px_60px] opacity-10"></div>
-      <div className="absolute inset-0 bg-gradient-to-br from-black via-slate-950 to-black"></div>
+      <div className="absolute inset-0   opacity-10"></div>
+      <div className="absolute inset-0 bg-black "></div>
 
       <div className="relative z-10 p-8 max-w-7xl mx-auto">
         <header className="flex justify-between items-center mb-12">
           <div className="flex items-center gap-4">
             <Shield className="w-10 h-10 text-cyan-400" />
             <h1 className="text-5xl font-bold tracking-tighter">
-              EXPERT REVIEW<span className="text-cyan-400"> PORTAL</span>
+              Expert review
             </h1>
           </div>
           <div className="flex items-center gap-4">
@@ -59,7 +59,7 @@ export default function ExpertDashboard() {
             </motion.button>
             <motion.button whileHover={{ scale:1.05 }} onClick={logout}
               className="flex items-center gap-2 px-5 py-3 bg-red-500/10 text-red-400 rounded-2xl border border-red-500/20">
-              <LogOut size={16} /> DISCONNECT
+              <LogOut size={16} /> Sign out
             </motion.button>
           </div>
         </header>
@@ -208,22 +208,25 @@ export default function ExpertDashboard() {
                 </div>
               )}
 
+              {selectedCase.provenance && (
+                <div className="mb-6 rounded-xl px-4 py-3 border text-sm text-red-300 bg-red-500/10 border-red-500/30">
+                  {selectedCase.provenance}
+                </div>
+              )}
+
               {/* AI Model Results (reference) */}
               <div className="mb-8">
                 <p className="text-slate-400 text-xs font-mono tracking-widest mb-3">AI MODEL REFERENCE SCORES</p>
                 <div className="grid grid-cols-3 gap-3">
-                  <div className="bg-slate-900/50 rounded-xl p-4 border border-slate-700">
-                    <p className="text-xs text-slate-500 mb-1">SigLIP</p>
-                    <p className="text-2xl font-mono text-cyan-400">—</p>
-                  </div>
-                  <div className="bg-slate-900/50 rounded-xl p-4 border border-slate-700">
-                    <p className="text-xs text-slate-500 mb-1">Xception</p>
-                    <p className="text-2xl font-mono text-cyan-400">—</p>
-                  </div>
-                  <div className="bg-slate-900/50 rounded-xl p-4 border border-slate-700">
-                    <p className="text-xs text-slate-500 mb-1">EfficientNet</p>
-                    <p className="text-2xl font-mono text-cyan-400">—</p>
-                  </div>
+                  {(selectedCase.model_scores || []).map(m => (
+                    <div key={m.name} className="bg-slate-900/50 rounded-xl p-4 border border-slate-700">
+                      <p className="text-xs text-slate-500 mb-1">{m.name}</p>
+                      <p className="text-2xl font-mono text-cyan-400">
+                        {m.fake_prob != null ? `${m.fake_prob.toFixed(1)}%` : '-'}
+                      </p>
+                      <p className="text-[10px] text-slate-600">fake score</p>
+                    </div>
+                  ))}
                 </div>
               </div>
 
@@ -236,7 +239,7 @@ export default function ExpertDashboard() {
                   {[1,2,3,4,5].map(n => (
                     <button key={n} onClick={() => setConfidence(n)}
                       className={`flex-1 py-3 rounded-xl font-bold transition-all
-                        ${confidence === n ? 'bg-cyan-500 text-black shadow-lg shadow-cyan-500/40' : 'bg-slate-800 text-slate-400 hover:bg-slate-700'}`}>
+ ${confidence === n ? 'bg-cyan-500 text-print shadow-lg shadow-cyan-500/40' : 'bg-slate-800 text-slate-400 hover:bg-slate-700'}`}>
                       {n}
                     </button>
                   ))}
@@ -249,12 +252,12 @@ export default function ExpertDashboard() {
               {/* Reasoning */}
               <div className="mb-8">
                 <label className="text-xs text-slate-400 font-mono tracking-widest block mb-2">
-                  REASONING (OPTIONAL)
+                  Reason (required when you mark a file fake)
                 </label>
                 <textarea
                   value={reasoning}
                   onChange={e => setReasoning(e.target.value)}
-                  placeholder="Notes on your decision, observations, concerns..."
+                  placeholder="What gives it away? e.g. skin is too smooth, no pores. Experts who use the same words teach the expert-trained detector."
                   className="w-full bg-slate-900 border border-slate-700 focus:border-cyan-400 rounded-2xl px-5 py-4 text-sm text-white placeholder-slate-500 focus:outline-none resize-none h-28 transition-all"
                 />
               </div>
@@ -273,17 +276,17 @@ export default function ExpertDashboard() {
               <div className="flex gap-4">
                 <motion.button whileHover={{ scale:1.03 }} whileTap={{ scale:0.97 }}
                   onClick={() => handleVerdict('REAL')} disabled={submitting}
-                  className="flex-1 py-5 text-lg font-bold bg-emerald-600 hover:bg-emerald-500 rounded-2xl flex items-center justify-center gap-3 disabled:opacity-50 transition-all">
+                  className="flex-1 py-5 text-lg font-bold bg-emerald-600 text-print hover:bg-emerald-500 rounded-2xl flex items-center justify-center gap-3 disabled:opacity-50 transition-all">
                   <CheckCircle size={20} /> REAL
                 </motion.button>
                 <motion.button whileHover={{ scale:1.03 }} whileTap={{ scale:0.97 }}
                   onClick={() => handleVerdict('UNCERTAIN')} disabled={submitting}
-                  className="flex-1 py-5 text-lg font-bold bg-yellow-600 hover:bg-yellow-500 rounded-2xl flex items-center justify-center gap-3 disabled:opacity-50 transition-all">
+                  className="flex-1 py-5 text-lg font-bold bg-yellow-600 text-print hover:bg-yellow-500 rounded-2xl flex items-center justify-center gap-3 disabled:opacity-50 transition-all">
                   <HelpCircle size={20} /> UNCERTAIN
                 </motion.button>
                 <motion.button whileHover={{ scale:1.03 }} whileTap={{ scale:0.97 }}
                   onClick={() => handleVerdict('FAKE')} disabled={submitting}
-                  className="flex-1 py-5 text-lg font-bold bg-red-600 hover:bg-red-500 rounded-2xl flex items-center justify-center gap-3 disabled:opacity-50 transition-all">
+                  className="flex-1 py-5 text-lg font-bold bg-red-600 text-print hover:bg-red-500 rounded-2xl flex items-center justify-center gap-3 disabled:opacity-50 transition-all">
                   <AlertTriangle size={20} /> FAKE
                 </motion.button>
               </div>

@@ -30,12 +30,10 @@ SHORT = {
     det.SIGLIP_NAME:       'SigLIP',
     det.XCEPTION_NAME:     'Xception',
     det.EFFICIENTNET_NAME: 'EfficientNet-B0',
+    det.AIHUMAN_NAME:      'AI-vs-Human',
+    det.EXPERT_NAME:       'Expert-trained',
 }
-SCORE_FIELD = {
-    det.SIGLIP_NAME:       'siglip_prob',
-    det.XCEPTION_NAME:     'xception_prob',
-    det.EFFICIENTNET_NAME: 'efficientnet_prob',
-}
+SCORE_FIELD = det.SCORE_FIELDS
 
 
 # -- Attribution maps --
@@ -61,12 +59,10 @@ def _cam_efficientnet(image, explain_fake):
     return cam.detach().cpu().numpy()
 
 
-def _cam_siglip(image, explain_fake):
+def _cam_hf(model, processor, fake, image, explain_fake):
     """Gradient x activation on the final patch tokens, reshaped to the patch grid."""
-    model, processor = registry.SIGLIP_MODEL, registry.SIGLIP_PROCESSOR
     if model is None:
         return None
-    fake = registry.SIGLIP_FAKE_INDEX
     with torch.enable_grad():
         inputs = processor(images=image, return_tensors='pt').to(det.DEVICE)
         out = model(**inputs, output_hidden_states=True)
@@ -80,9 +76,20 @@ def _cam_siglip(image, explain_fake):
     return cam.reshape(side, side).detach().cpu().numpy()
 
 
+def _cam_siglip(image, explain_fake):
+    return _cam_hf(registry.SIGLIP_MODEL, registry.SIGLIP_PROCESSOR,
+                   registry.SIGLIP_FAKE_INDEX, image, explain_fake)
+
+
+def _cam_aihuman(image, explain_fake):
+    return _cam_hf(registry.AIHUMAN_MODEL, registry.AIHUMAN_PROCESSOR,
+                   registry.AIHUMAN_FAKE_INDEX, image, explain_fake)
+
+
 CAM_BUILDERS = {
     det.SIGLIP_NAME:       _cam_siglip,
     det.EFFICIENTNET_NAME: _cam_efficientnet,
+    det.AIHUMAN_NAME:      _cam_aihuman,
 }
 
 
@@ -137,14 +144,19 @@ def build_text(scan, model_name, has_heatmap):
     side = 'fake' if prob >= 50 else 'real'
     parts = [f'{short} scored this {scan.media_type} {prob:.1f}% likely fake '
              f'(label: {det._verdict(prob)}).']
-    if has_heatmap:
+    if model_name == det.EXPERT_NAME:
+        meta = (registry.EXPERT_HEAD or {}).get('meta', {})
+        reasons = '; '.join(meta.get('reasons', [])) or 'expert reasons'
+        parts.append(f'This detector was trained on {meta.get("trained_on", "?")} images reviewed by '
+                     f'experts (fake reasons: {reasons}). It has no heatmap.')
+    elif has_heatmap:
         parts.append(f'The heatmap marks the areas that pushed its score toward {side}. '
                      f'It shows where the model looked, not why.')
     elif scan.media_type != 'image':
         parts.append('Heatmaps are only available for images.')
     parts.append('This model outputs a score only, so no reasons are generated for it.')
 
-    enabled = {name for name, _ in det.MODEL_RUNNERS}
+    enabled = {name for name, _ in det.active_runners()}
     for other_name, field in SCORE_FIELD.items():
         other = getattr(scan, field)
         if other_name == model_name or other is None or other_name not in enabled:
@@ -180,6 +192,9 @@ def api_model_voice(request):
         scan = ScanResult.objects.get(id=int(body.get('scan_id')))
     except (ScanResult.DoesNotExist, TypeError, ValueError):
         return JsonResponse({'error': 'Scan not found'}, status=404)
+    from detector.views import can_view_scan
+    if not can_view_scan(request.user, scan):
+        return JsonResponse({'error': 'You cannot view this scan.'}, status=403)
 
     prob = getattr(scan, SCORE_FIELD[model_name])
     heatmap = build_heatmap(scan, model_name, prob >= 50) if prob is not None else None

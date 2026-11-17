@@ -47,6 +47,31 @@ def _prob_verdict(prob):
     return _verdict(prob)
 
 
+def _score_kwargs(probs):
+    """Map {model_name: fake_prob} to ScanResult columns."""
+    from detector.image_detector import SCORE_FIELDS
+    return {field: probs.get(name) for name, field in SCORE_FIELDS.items()}
+
+
+def _cached_model_results(scan):
+    from detector import image_detector as det
+    results = []
+    for name, _ in det.active_runners():
+        prob = getattr(scan, det.SCORE_FIELDS[name], None)
+        results.append({'model_name': name, 'fake_prob': prob,
+                        'real_prob': None if prob is None else round(100 - prob, 2),
+                        'verdict': _prob_verdict(prob)})
+    return results
+
+
+def _model_scores(scan):
+    """Short name + stored fake score for every enabled model (expert dashboard)."""
+    from detector import image_detector as det
+    from detector.explain import SHORT
+    return [{'name': SHORT.get(name, name), 'fake_prob': getattr(scan, det.SCORE_FIELDS[name], None)}
+            for name, _ in det.active_runners()]
+
+
 def is_expert(user):
     return user.is_authenticated and (
         user.groups.filter(name='Experts').exists() or user.is_staff
@@ -55,6 +80,15 @@ def is_expert(user):
 
 def is_admin(user):
     return user.is_authenticated and user.is_staff
+
+
+def can_view_scan(user, scan):
+    """Owner, experts and admins. Old scans with no owner stay visible to logged-in users."""
+    if not user.is_authenticated:
+        return False
+    if is_expert(user) or scan.uploaded_by_id is None or scan.uploaded_by_id == user.id:
+        return True
+    return False
 
 
 # ── CORS preflight ─────────────────────────────────────────────────────────────
@@ -82,6 +116,8 @@ def detect(request):
     2. Caching of results from identical files
     3. Media preview URL generation
     """
+    if not request.user.is_authenticated:
+        return _json({'error': 'Please log in to analyse files.'}, status=401)
     uploaded = request.FILES.get('file')
     if not uploaded:
         return _json({'error': 'No file uploaded.'}, status=400)
@@ -98,19 +134,28 @@ def detect(request):
     
     if existing_scan and existing_scan.status == 'REVIEWED':
         # This is a duplicate of a previously analyzed file - return cached result
+        # Give this user their own record that points at the reviewed original,
+        # so they can open it, see the explanations and file a complaint.
+        copy = ScanResult.objects.create(
+            media_type=existing_scan.media_type, file_name=filename, file_hash=file_hash,
+            uploaded_by=request.user, is_cached_result=True, original_scan=existing_scan,
+            media_file=existing_scan.media_file.name if existing_scan.media_file else None,
+            **{f: getattr(existing_scan, f) for f in (
+                'siglip_prob', 'xception_prob', 'efficientnet_prob', 'aihuman_prob', 'expert_prob',
+                'model_ensemble_prob', 'model_ensemble_verdict', 'provenance_note',
+                'final_verdict', 'final_confidence')},
+            status='REVIEWED',
+        )
         return _json({
             'status':              'REVIEWED',  # Mark as already reviewed
-            'scan_id':             existing_scan.id,
+            'scan_id':             copy.id,
             'file_name':           filename,
             'media_type':          existing_scan.media_type,
             'is_cached_result':    True,
             'original_scan_id':    existing_scan.id,
             'message':             'This file has been analyzed before. Using cached result.',
-            'model_results':       [
-                {'model_name': 'SigLIP (HuggingFace)', 'fake_prob': existing_scan.siglip_prob, 'real_prob': round(100 - existing_scan.siglip_prob, 2) if existing_scan.siglip_prob else None, 'verdict': _prob_verdict(existing_scan.siglip_prob)},
-                {'model_name': 'Xception-FaceForensics', 'fake_prob': existing_scan.xception_prob, 'real_prob': round(100 - existing_scan.xception_prob, 2) if existing_scan.xception_prob else None, 'verdict': _prob_verdict(existing_scan.xception_prob)},
-                {'model_name': 'EfficientNet-B0 (Custom)', 'fake_prob': existing_scan.efficientnet_prob, 'real_prob': round(100 - existing_scan.efficientnet_prob, 2) if existing_scan.efficientnet_prob else None, 'verdict': _prob_verdict(existing_scan.efficientnet_prob)},
-            ],
+            'model_results':       _cached_model_results(existing_scan),
+            'ai_label':            existing_scan.model_ensemble_verdict,
             'ensemble':            {
                 'model_name': 'Ensemble (Average)',
                 'fake_prob':  existing_scan.model_ensemble_prob,
@@ -151,14 +196,20 @@ def detect(request):
     probs = {r['model_name']: r.get('fake_prob') for r in result.get('model_results', [])}
     ens   = result.get('ensemble', {})
 
+    # An AI label written into the file itself outranks the detectors.
+    from detector.provenance import check_provenance
+    provenance = check_provenance(file_bytes)
+    if provenance['ai_generated']:
+        ens['verdict'] = 'FAKE'
+
     # Create new scan record with file hash
     scan = ScanResult(
         media_type             = result.get('media_type', 'image'),
         file_name              = filename,
         file_hash              = file_hash,  # Store hash for duplicate detection
-        siglip_prob            = probs.get('SigLIP (HuggingFace)'),
-        xception_prob          = probs.get('Xception-FaceForensics'),
-        efficientnet_prob      = probs.get('EfficientNet-B0 (Custom)'),
+        uploaded_by            = request.user,
+        **_score_kwargs(probs),
+        provenance_note        = provenance['note'],
         model_ensemble_prob    = ens.get('fake_prob'),
         model_ensemble_verdict = ens.get('verdict', ''),
         status                 = 'PENDING',
@@ -172,6 +223,8 @@ def detect(request):
     result['file_name'] = filename
     result['is_cached_result'] = False
     result['message'] = 'AI analysis complete. Awaiting expert review for final verdict.'
+    result['ai_label']   = scan.model_ensemble_verdict
+    result['provenance'] = provenance
     result['ensemble']['verdict'] = 'PENDING'
 
     return _json(result)
@@ -180,7 +233,9 @@ def detect(request):
 def scan_status(request, scan_id):
     """Get the current status of a scan, including expert verdict when ready."""
     scan = get_object_or_404(ScanResult, id=scan_id)
-    
+    if not can_view_scan(request.user, scan):
+        return _json({'error': 'You cannot view this scan.'}, status=403)
+
     # Build media URL for preview
     media_url = None
     if scan.media_file:
@@ -428,6 +483,8 @@ def api_expert_queue(request):
             'status':       scan.status,
             'uploaded_at':  scan.uploaded_at.isoformat(),
             'media_url':    media_url,  # URL for preview
+            'model_scores': _model_scores(scan),
+            'provenance':   scan.provenance_note,
         })
 
     reviewed = []
@@ -467,6 +524,8 @@ def api_expert_review(request, scan_id):
     verdict    = body.get('verdict', '').upper()
     confidence = body.get('confidence')
     reasoning  = body.get('reasoning', '').strip()
+    if verdict == 'FAKE' and not reasoning:
+        return _json({'error': 'Write why this file is fake. Experts giving the same reason teach the expert-trained detector.'}, status=400)
 
     if verdict not in ('FAKE', 'REAL', 'UNCERTAIN'):
         return _json({'error': 'Invalid verdict'}, status=400)
@@ -487,6 +546,12 @@ def api_expert_review(request, scan_id):
     scan.expert_review = review
     scan.save()
     scan.compute_final_verdict()
+
+    try:
+        from detector import learning
+        learning.maybe_start()
+    except Exception as exc:
+        print(f'[Learning] check failed: {exc}')
 
     return _json({
         'ok':             True,
@@ -679,3 +744,83 @@ def expert_review(request, scan_id):
 
 # Model explanations: scores + Grad-CAM heatmap, no generated text.
 from detector.explain import api_model_voice  # noqa: E402,F401
+from detector.learning_api import api_admin_learning  # noqa: E402,F401
+
+
+
+# -- Complaints ------------------------------------------------------------------
+
+def _complaint_json(c):
+    return {
+        'id':         c.id,
+        'scan_id':    c.scan_id,
+        'reporter':   c.reporter.username if c.reporter else None,
+        'reason':     c.reason,
+        'details':    c.details,
+        'status':     c.status,
+        'created_at': c.created_at.isoformat(),
+    }
+
+
+@csrf_exempt
+def api_complaints(request):
+    """
+    POST /api/complaints/  { scan_id, reason, details }  a user disputes a verdict
+    GET  /api/complaints/  admins see every complaint, users see their own
+    """
+    from detector.models import Complaint
+    if request.method == 'OPTIONS':
+        return cors_preflight(request)
+    if not request.user.is_authenticated:
+        return _json({'error': 'Please log in first.'}, status=401)
+
+    if request.method == 'GET':
+        qs = Complaint.objects.select_related('reporter')
+        if not is_admin(request.user):
+            qs = qs.filter(reporter=request.user)
+        return _json({'complaints': [_complaint_json(c) for c in qs[:200]]})
+
+    if request.method != 'POST':
+        return _json({'error': 'GET or POST required'}, status=405)
+    try:
+        body = json.loads(request.body)
+    except json.JSONDecodeError:
+        return _json({'error': 'Invalid JSON'}, status=400)
+
+    reason  = str(body.get('reason', '')).strip()[:200]
+    details = str(body.get('details', '')).strip()[:5000]
+    if not reason:
+        return _json({'error': 'Please give a reason.'}, status=400)
+    try:
+        scan = ScanResult.objects.get(id=int(body.get('scan_id')))
+    except (ScanResult.DoesNotExist, TypeError, ValueError):
+        return _json({'error': 'Scan not found'}, status=404)
+    if not can_view_scan(request.user, scan):
+        return _json({'error': 'You can only complain about your own scans.'}, status=403)
+    if Complaint.objects.filter(scan=scan, reporter=request.user, status='pending').exists():
+        return _json({'error': 'You already have an open complaint about this scan.'}, status=400)
+
+    c = Complaint.objects.create(scan=scan, reporter=request.user, reason=reason, details=details)
+    return _json({'ok': True, 'complaint': _complaint_json(c)})
+
+
+@csrf_exempt
+def api_complaint_action(request, complaint_id):
+    """POST /api/complaints/<id>/action/  { action: 'resolved' | 'dismissed' }  admins only"""
+    from detector.models import Complaint
+    if request.method == 'OPTIONS':
+        return cors_preflight(request)
+    if not is_admin(request.user):
+        return _json({'error': 'Admin access required'}, status=403)
+    if request.method != 'POST':
+        return _json({'error': 'POST required'}, status=405)
+    try:
+        action = json.loads(request.body).get('action')
+    except (json.JSONDecodeError, AttributeError):
+        return _json({'error': 'Invalid JSON'}, status=400)
+    if action not in ('resolved', 'dismissed'):
+        return _json({'error': "action must be 'resolved' or 'dismissed'"}, status=400)
+    c = get_object_or_404(Complaint, id=complaint_id)
+    c.status = action
+    c.save(update_fields=['status'])
+    return _json({'ok': True, 'status': c.status})

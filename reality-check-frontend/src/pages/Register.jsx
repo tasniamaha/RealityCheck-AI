@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import Logo from '../components/Logo';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -31,7 +32,7 @@ const InputField = ({ label, name, type = 'text', placeholder, value, onChange, 
     </div>
     {fieldError && (
       <p className="mt-1.5 text-red-400 text-xs flex items-center gap-1">
-        <span>⚠</span> {fieldError}
+        <span></span> {fieldError}
       </p>
     )}
   </div>
@@ -113,11 +114,11 @@ export default function Register() {
   return (
     <div className="min-h-screen bg-black text-white overflow-hidden relative flex items-center justify-center py-12">
       {/* Background */}
-      <div className="absolute inset-0 bg-[radial-gradient(#22d3ee_0.7px,transparent_1px)] bg-[length:50px_50px] opacity-20 animate-grid"></div>
+      <div className="absolute inset-0   opacity-20 animate-grid"></div>
       <motion.div
         animate={{ backgroundPosition: ['0% 50%', '100% 50%', '0% 50%'] }}
         transition={{ duration: 25, repeat: Infinity, ease: 'linear' }}
-        className="absolute inset-0 bg-gradient-to-br from-cyan-900/30 via-purple-900/30 to-black bg-[length:400%_400%]"
+        className="absolute inset-0 bg-cyan-900/30 "
       />
       <motion.div
         animate={{ x:[0,80,-60,0], y:[0,-70,90,0], scale:[1,1.15,0.95,1] }}
@@ -138,15 +139,7 @@ export default function Register() {
       >
         {/* Logo */}
         <div className="flex justify-center mb-6">
-          <div className="flex items-center gap-3">
-            <div className="relative">
-              <Shield className="w-12 h-12 text-cyan-400" />
-              <div className="absolute inset-0 bg-cyan-400/40 blur-xl rounded-full animate-pulse" />
-            </div>
-            <h1 className="text-4xl font-bold tracking-tighter">
-              REALITY CHECK
-            </h1>
-          </div>
+          <Logo size={48} to={null} />
         </div>
 
         <div className="text-center mb-8">
@@ -222,7 +215,7 @@ export default function Register() {
               </div>
             )}
             {fieldErrors.password && (
-              <p className="mt-1.5 text-red-400 text-xs">⚠ {fieldErrors.password}</p>
+              <p className="mt-1.5 text-red-400 text-xs"> {fieldErrors.password}</p>
             )}
           </div>
 
@@ -251,7 +244,7 @@ export default function Register() {
               )}
             </div>
             {fieldErrors.confirmPassword && (
-              <p className="mt-1.5 text-red-400 text-xs">⚠ {fieldErrors.confirmPassword}</p>
+              <p className="mt-1.5 text-red-400 text-xs"> {fieldErrors.confirmPassword}</p>
             )}
           </div>
         </div>
@@ -262,7 +255,7 @@ export default function Register() {
           whileTap={{ scale: 0.97 }}
           onClick={handleRegister}
           disabled={isLoading}
-          className="mt-8 w-full py-5 bg-cyan-500 rounded-2xl font-bold text-lg flex items-center justify-center gap-3 relative overflow-hidden group disabled:opacity-60"
+          className="mt-8 w-full py-5 bg-cyan-500 text-print rounded-2xl font-bold text-lg flex items-center justify-center gap-3 relative overflow-hidden group disabled:opacity-60"
         >
           {isLoading ? (
             <span className="flex items-center gap-3">

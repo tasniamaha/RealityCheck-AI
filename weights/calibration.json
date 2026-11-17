@@ -1,0 +1,19 @@
+{
+  "models": [
+    "SigLIP (HuggingFace)",
+    "EfficientNet-B0 (Custom)",
+    "AI-vs-Human (SigLIP)"
+  ],
+  "weights": [
+    0.049893,
+    0.397623,
+    0.124374
+  ],
+  "bias": -0.06119,
+  "real_below": 30.0,
+  "fake_from": 70.0,
+  "trained_on": {
+    "real": 110,
+    "fake": 111
+  }
+}

@@ -1,5 +1,5 @@
 from django.contrib import admin
-from detector.models import ScanResult, ExpertReview, ExpertApplication
+from detector.models import ScanResult, ExpertReview, ExpertApplication, Complaint
 
 
 @admin.register(ExpertApplication)
@@ -20,9 +20,17 @@ class ExpertReviewAdmin(admin.ModelAdmin):
 
 @admin.register(ScanResult)
 class ScanResultAdmin(admin.ModelAdmin):
-    list_display  = ('file_name', 'media_type', 'status',
+    list_display  = ('file_name', 'media_type', 'uploaded_by', 'status',
                      'model_ensemble_verdict', 'final_verdict',
                      'final_confidence', 'uploaded_at')
     list_filter   = ('status', 'media_type', 'final_verdict')
-    search_fields = ('file_name',)
+    search_fields = ('file_name', 'uploaded_by__username')
     readonly_fields = ('uploaded_at', 'final_verdict', 'final_confidence')
+
+
+@admin.register(Complaint)
+class ComplaintAdmin(admin.ModelAdmin):
+    list_display  = ('scan', 'reporter', 'reason', 'status', 'created_at')
+    list_filter   = ('status',)
+    search_fields = ('reason', 'details', 'reporter__username')
+    readonly_fields = ('created_at',)

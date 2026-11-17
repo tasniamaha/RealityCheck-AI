@@ -1,9 +1,14 @@
 __pycache__/
 *.pyc
 *.bak
+.env
 _backup/
 testset/
 eval_results.csv
 media/uploads/
 node_modules/
 dist/
+db.sqlite3
+weights/testset_scores.json
+weights/learning_status.json
+weights/*.tmp

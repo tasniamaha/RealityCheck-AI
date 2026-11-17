@@ -20,6 +20,9 @@ class ScanResult(models.Model):
     file_hash = models.CharField(max_length=64, unique=False, blank=True, db_index=True)
     # Track if this is a cached result from a previously analyzed identical file
     is_cached_result = models.BooleanField(default=False)
+    # Who uploaded it. Users can only see their own scans; experts and admins see all.
+    uploaded_by = models.ForeignKey(User, null=True, blank=True, on_delete=models.SET_NULL,
+                                    related_name='scans')
     # Reference to the original scan if this is a cached duplicate
     original_scan = models.ForeignKey(
         'self',
@@ -32,9 +35,12 @@ class ScanResult(models.Model):
     siglip_prob       = models.FloatField(null=True, blank=True)
     xception_prob     = models.FloatField(null=True, blank=True)
     efficientnet_prob = models.FloatField(null=True, blank=True)
+    aihuman_prob      = models.FloatField(null=True, blank=True)
+    expert_prob       = models.FloatField(null=True, blank=True)   # expert-trained detector
 
     model_ensemble_prob    = models.FloatField(null=True, blank=True)
     model_ensemble_verdict = models.CharField(max_length=20, blank=True)
+    provenance_note        = models.TextField(blank=True)   # AI label found in the file's metadata
 
     status        = models.CharField(max_length=20, choices=STATUS_CHOICES, default='PENDING')
     expert_review = models.OneToOneField(
@@ -49,7 +55,7 @@ class ScanResult(models.Model):
         ordering = ['-uploaded_at']
 
     def __str__(self):
-        return f"{self.file_name} [{self.status}] — {self.final_verdict}"
+        return f"{self.file_name} [{self.status}] - {self.final_verdict}"
 
     def compute_final_verdict(self):
         """
@@ -66,10 +72,7 @@ class ScanResult(models.Model):
         if review is None:
             return
 
-        from detector.image_detector import _verdict
-        model_label = None
-        if self.model_ensemble_prob is not None:
-            model_label = _verdict(self.model_ensemble_prob)
+        model_label = self.model_ensemble_verdict or None   # label the AI gave at upload time
 
         verdict    = review.verdict
         confidence = {1: 50.0, 2: 60.0, 3: 70.0, 4: 80.0, 5: 90.0}.get(review.confidence, 70.0)
@@ -129,3 +132,22 @@ class ExpertApplication(models.Model):
 
     def __str__(self):
         return f"{self.name} <{self.email}> [{self.status}]"
+
+
+
+class Complaint(models.Model):
+    """A user disputes the verdict on one of their scans. An admin resolves or dismisses it."""
+    STATUS_CHOICES = [('pending', 'Pending'), ('resolved', 'Resolved'), ('dismissed', 'Dismissed')]
+
+    scan       = models.ForeignKey(ScanResult, on_delete=models.CASCADE, related_name='complaints')
+    reporter   = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, related_name='complaints')
+    reason     = models.CharField(max_length=200)
+    details    = models.TextField(blank=True)
+    status     = models.CharField(max_length=20, choices=STATUS_CHOICES, default='pending')
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['-created_at']
+
+    def __str__(self):
+        return f"Complaint on scan {self.scan_id} [{self.status}]"

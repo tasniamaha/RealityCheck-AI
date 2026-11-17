@@ -8,7 +8,8 @@ Folder layout:
     testset/real/*.jpg|png|mp4...
     testset/fake/*.jpg|png|mp4...
 
-Prints per-model and ensemble metrics and writes every score to a CSV.
+Prints per-model and ensemble metrics and writes every score to a CSV
+(which `python manage.py calibrate` reads).
 --candidate also scores another Hugging Face detector (images only) so you can
 see whether it beats the current one before switching to it.
 """
@@ -22,13 +23,16 @@ import torch.nn.functional as F
 from django.core.management.base import BaseCommand, CommandError
 from PIL import Image
 
+from detector import calibration
 from detector import image_detector as det
 from detector import model_registry as registry
+from detector.provenance import check_provenance
 from detector.video_detector import analyze_video
 
 IMAGE_EXTS = {'.jpg', '.jpeg', '.png', '.webp', '.bmp'}
 VIDEO_EXTS = {'.mp4', '.avi', '.mov', '.mkv'}
-SHORT = {det.SIGLIP_NAME: 'SigLIP', det.XCEPTION_NAME: 'Xception', det.EFFICIENTNET_NAME: 'EfficientNet'}
+SHORT = {det.SIGLIP_NAME: 'SigLIP', det.XCEPTION_NAME: 'Xception', det.EFFICIENTNET_NAME: 'EfficientNet',
+         det.AIHUMAN_NAME: 'AI-vs-Human', det.EXPERT_NAME: 'Expert-trained'}
 WIDTH = 62
 
 
@@ -112,7 +116,7 @@ class Command(BaseCommand):
         if small:
             self.stdout.write('WARNING: fewer than 50 files in a class - treat these numbers as a smoke test only.\n')
 
-        models = [name for name, _ in det.MODEL_RUNNERS]
+        models = [name for name, _ in det.active_runners()]
         candidates = self._load_candidates(opts['candidate'])
 
         rows = []
@@ -129,6 +133,8 @@ class Command(BaseCommand):
                 continue
             scores = {r['model_name']: r.get('fake_prob') for r in results}
             row = {'path': path, 'label': label, **{m: scores.get(m) for m in models}}
+            with open(path, 'rb') as fh:
+                row['ai_label'] = check_provenance(fh.read())['ai_generated']
             for cid, loaded in candidates.items():
                 row[cid] = self._score_candidate(loaded, image) if image is not None else None
             rows.append(row)
@@ -159,7 +165,7 @@ class Command(BaseCommand):
             pairs = [(r['label'], average(r, combo)) for r in rows if average(r, combo) is not None]
             self.stdout.write(summarize('Ensemble: ' + '+'.join(SHORT[m] for m in combo), pairs, total))
         others = [m for m in working if m != det.SIGLIP_NAME]
-        for cid in candidates:
+        for cid in candidates:  # candidate takes the SigLIP slot
             combo = [cid] + others
             pairs = [(r['label'], average(r, combo)) for r in rows if average(r, combo) is not None]
             self.stdout.write(summarize(f'Ensemble with candidate: {cid}', pairs, total))
@@ -176,24 +182,39 @@ class Command(BaseCommand):
         columns = models + list(candidates)
         with open(opts['csv'], 'w', newline='', encoding='utf-8') as fh:
             w = csv.writer(fh)
-            w.writerow(['file', 'label'] + [SHORT.get(c, c) for c in columns])
+            w.writerow(['file', 'label'] + [SHORT.get(c, c) for c in columns] + ['ai_label_in_file'])
             for r in rows:
-                w.writerow([r['path'], 'fake' if r['label'] else 'real'] + [r[c] for c in columns])
+                w.writerow([r['path'], 'fake' if r['label'] else 'real'] + [r[c] for c in columns]
+                           + [r.get('ai_label', False)])
         self.stdout.write(f'Per-file scores written to {opts["csv"]}')
 
     def _band_report(self, rows, working):
-        """What the app would actually show: REAL / UNCERTAIN / FAKE from the ensemble."""
+        """What the app would actually show: metadata label first, then the ensemble."""
+        cal = calibration.load()
+        if cal:
+            how = (f'calibrated weights from weights/calibration.json, REAL below {cal["real_below"]:g}, '
+                   f'FAKE from {cal["fake_from"]:g} - optimistic if calibrated on this same set')
+        else:
+            how = f'plain average, REAL below {det.REAL_BELOW}, FAKE from {det.FAKE_FROM}'
+
         counts = {0: {'REAL': 0, 'UNCERTAIN': 0, 'FAKE': 0}, 1: {'REAL': 0, 'UNCERTAIN': 0, 'FAKE': 0}}
+        labelled = {0: 0, 1: 0}
         for r in rows:
-            avg = average(r, working)
-            if avg is not None:
-                counts[r['label']][det._verdict(avg)] += 1
-        self.stdout.write(f'\nWhat the app shows (REAL below {det.REAL_BELOW}, FAKE from {det.FAKE_FROM}, '
-                          f'otherwise UNCERTAIN -> expert):')
+            if r.get('ai_label'):
+                labelled[r['label']] += 1
+                counts[r['label']]['FAKE'] += 1
+                continue
+            results = [{'model_name': m, 'fake_prob': r[m]} for m in working]
+            v = det.compute_ensemble(results)['verdict']
+            if v in counts[r['label']]:
+                counts[r['label']][v] += 1
+
+        self.stdout.write(f'\nWhat the app shows ({how}; otherwise UNCERTAIN -> expert):')
         for label, name, right, wrong in ((1, 'fake', 'FAKE', 'REAL'), (0, 'real', 'REAL', 'FAKE')):
             c = counts[label]
             self.stdout.write(f'  {name} files: {c[right]} labelled {right}, {c["UNCERTAIN"]} UNCERTAIN, '
                               f'{c[wrong]} wrongly labelled {wrong}')
+        self.stdout.write(f'  AI label found in the file metadata: {labelled[1]} of the fakes, {labelled[0]} of the reals')
 
     def _load_candidates(self, ids):
         loaded = {}

@@ -23,26 +23,9 @@ export default function ResearchPapers() {
   return (
     <div className="min-h-screen bg-black text-white overflow-hidden">
       {/* Background */}
-      <div className="fixed inset-0 bg-[radial-gradient(#22d3ee_0.5px,transparent_1px)] bg-[length:48px_48px] opacity-[0.06] pointer-events-none" />
-      <div className="fixed inset-0 bg-[radial-gradient(ellipse_70%_50%_at_50%_0%,rgba(192,132,252,0.07),transparent)] pointer-events-none" />
+      <div className="fixed inset-0   opacity-[0.06] pointer-events-none" />
+      <div className="fixed inset-0  pointer-events-none" />
 
-      {/* Navbar */}
-      <nav className="fixed top-0 w-full z-50 glass border-b border-cyan-500/20">
-        <div className="max-w-7xl mx-auto px-8 py-5 flex justify-between items-center">
-          <div className="flex items-center gap-3">
-            <Shield className="w-9 h-9 text-cyan-400" />
-            <h1 className="text-4xl font-bold tracking-tighter">
-              REALITY<span className="text-cyan-400">CHECK</span>
-            </h1>
-          </div>
-          <button
-            onClick={() => navigate('/methodology')}
-            className="flex items-center gap-2 text-sm text-slate-400 hover:text-cyan-400 transition-colors"
-          >
-            <ArrowLeft size={16} /> Back to Methodology
-          </button>
-        </div>
-      </nav>
 
       <div className="max-w-6xl mx-auto px-8 pt-32 pb-24 relative z-10">
 

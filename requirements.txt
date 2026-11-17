@@ -1,0 +1,11 @@
+Django>=6.0
+django-cors-headers>=4.4
+torch>=2.4
+torchvision>=0.19
+transformers>=4.45
+huggingface_hub>=0.25
+safetensors>=0.4
+numpy>=1.26
+Pillow>=10.4
+opencv-python>=4.10
+pytorchcv>=0.0.67
