@@ -7,3 +7,4 @@ eval_results.csv
 media/uploads/
 node_modules/
 dist/
+.venv-data/
