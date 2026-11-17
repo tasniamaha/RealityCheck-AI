@@ -147,7 +147,7 @@ export const tagColor = {
 export const architectureSteps = [
   { id: '01', label: 'Upload',        sub: 'JPG · PNG · MP4 · MOV',          color: '#7A2AB8' },
   { id: '02', label: 'Preprocess',    sub: 'Frame extraction · Normalise',    color: '#7A2AB8' },
-  { id: '03', label: 'AI Analysis',   sub: 'SigLIP · EfficientNet-B0 · AI-vs-Human', color: '#7A2AB8' },
+  { id: '03', label: 'AI Analysis',   sub: 'SigLIP · Xception · EfficientNet-B0 · AI-vs-Human', color: '#7A2AB8' },
   { id: '04', label: 'Ensemble',      sub: 'Weighted by measured accuracy', color: '#7A2AB8' },
   { id: '05', label: 'Score',         sub: 'REAL · FAKE · UNCERTAIN',         color: '#7A2AB8' },
   { id: '06', label: 'Expert Verdict',sub: 'Human-certified decision',        color: '#7A2AB8' },

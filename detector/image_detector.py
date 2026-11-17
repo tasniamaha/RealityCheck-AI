@@ -92,8 +92,40 @@ def _unavailable(name: str, verdict: str, message: str) -> Dict[str, Any]:
 
 
 # -- Face detection --
+#
+# Primary detector: YuNet (OpenCV FaceDetectorYN). Put its model file in weights/, e.g.
+# weights/face_detection_yunet_2023mar.onnx (from the opencv_zoo repository).
+# If the file is missing, the old Haar cascade is used and a warning is printed once.
 
+import glob
+import threading
+
+YUNET_SCORE_THRESHOLD = 0.6    # lower = finds more faces, but more false detections
+YUNET_MAX_SIDE        = 640    # large images are shrunk to this before detection
+
+_YUNET        = None
+_YUNET_TRIED  = False
 _FACE_CASCADE = None
+_FACE_LOCK    = threading.Lock()
+
+
+def _get_yunet():
+    """Returns the YuNet detector, or None if its model file is not in weights/."""
+    global _YUNET, _YUNET_TRIED
+    if not _YUNET_TRIED:
+        _YUNET_TRIED = True
+        import cv2
+        from django.conf import settings
+        found = sorted(glob.glob(os.path.join(str(settings.BASE_DIR), 'weights',
+                                              'face_detection_yunet*.onnx')))
+        if found and hasattr(cv2, 'FaceDetectorYN'):
+            _YUNET = cv2.FaceDetectorYN.create(found[-1], '', (320, 320),
+                                               YUNET_SCORE_THRESHOLD, 0.3, 5000)
+            print(f'[FaceDetector] Using YuNet: {os.path.basename(found[-1])}')
+        else:
+            print('[FaceDetector] WARNING: no weights/face_detection_yunet*.onnx found '
+                  '- falling back to the Haar cascade, which misses many faces.')
+    return _YUNET
 
 
 def _get_face_cascade():
@@ -113,8 +145,24 @@ def _get_face_cascade():
     return _FACE_CASCADE
 
 
-def crop_face(image: Image.Image, margin: float = FACE_MARGIN) -> Optional[Image.Image]:
-    """Returns a square crop around the largest face, or None if there is no face."""
+def _largest_face_yunet(image: Image.Image, detector):
+    import cv2
+    import numpy as np
+
+    bgr = cv2.cvtColor(np.array(image), cv2.COLOR_RGB2BGR)
+    h, w = bgr.shape[:2]
+    scale = min(1.0, YUNET_MAX_SIDE / max(h, w))
+    if scale < 1.0:
+        bgr = cv2.resize(bgr, (max(1, int(w * scale)), max(1, int(h * scale))))
+    detector.setInputSize((bgr.shape[1], bgr.shape[0]))
+    _, faces = detector.detect(bgr)
+    if faces is None or len(faces) == 0:
+        return None
+    x, y, fw, fh = max(faces, key=lambda f: f[2] * f[3])[:4] / scale
+    return int(x), int(y), int(fw), int(fh)
+
+
+def _largest_face_haar(image: Image.Image):
     import cv2
     import numpy as np
 
@@ -124,13 +172,26 @@ def crop_face(image: Image.Image, margin: float = FACE_MARGIN) -> Optional[Image
         gray, scaleFactor=1.1, minNeighbors=5, minSize=(min_side, min_side))
     if len(faces) == 0:
         return None
+    return tuple(int(v) for v in max(faces, key=lambda f: f[2] * f[3]))
 
-    x, y, w, h = max(faces, key=lambda f: f[2] * f[3])
+
+def crop_face(image: Image.Image, margin: float = FACE_MARGIN) -> Optional[Image.Image]:
+    """Returns a square crop around the largest face, or None if there is no face."""
+    with _FACE_LOCK:   # the detectors keep internal state, so one image at a time
+        detector = _get_yunet()
+        box = (_largest_face_yunet(image, detector) if detector is not None
+               else _largest_face_haar(image))
+    if box is None:
+        return None
+
+    x, y, w, h = box
+    if w < 10 or h < 10:
+        return None
     half = int(max(w, h) * (1 + 2 * margin) / 2)
     cx, cy = x + w // 2, y + h // 2
-    box = (max(0, cx - half), max(0, cy - half),
-           min(image.width, cx + half), min(image.height, cy + half))
-    return image.crop(box)
+    crop_box = (max(0, cx - half), max(0, cy - half),
+                min(image.width, cx + half), min(image.height, cy + half))
+    return image.crop(crop_box)
 
 
 # -- Per-model runners --

@@ -26,6 +26,13 @@ const MODEL_PERSONAS = {
     icon: '',
     specialty: 'convolutional network trained on real vs. fake images',
   },
+  'Xception-FaceForensics': {
+    shortName: 'Xception',
+    role: 'Face-swap detector, FaceForensics++ checkpoint',
+    color: 'cyan',
+    icon: '',
+    specialty: 'convolutional network trained on face-swap videos; scores only the face it finds',
+  },
   'AI-vs-Human (SigLIP)': {
     shortName: 'AI-vs-Human',
     role: 'Vision transformer, trained on AI-generated vs. human images',

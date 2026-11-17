@@ -1,4 +1,4 @@
-"""
+﻿"""
 model_registry.py
 ------------------
 Loads the detection models ONCE when Django starts.
@@ -37,7 +37,7 @@ DEFAULT_THIRD_HF_DETECTOR = 'Ateeqq/ai-vs-human-image-detector'
 
 # Off: in evaluation Xception ranked below chance on AI-generated images
 # (the checkpoint looks like a face-swap video model). Set True to load and use it again.
-XCEPTION_ENABLED = False
+XCEPTION_ENABLED = True
 
 
 # -- Xception --
