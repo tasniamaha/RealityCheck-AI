@@ -280,7 +280,22 @@ def run_all_models(image: Image.Image) -> List[Dict[str, Any]]:
     return results
 
 
+# The combined AI label never says REAL by itself. A low score means the detectors
+# found nothing, not that the file is genuine: it goes to an expert as UNCERTAIN.
+AUTO_REAL = False
+
+
+def _no_auto_real(result):
+    if not AUTO_REAL and result.get('verdict') == 'REAL':
+        result['verdict'] = 'UNCERTAIN'
+    return result
+
+
 def compute_ensemble(results: List[Dict]) -> Dict[str, Any]:
+    return _no_auto_real(_compute_ensemble(results))
+
+
+def _compute_ensemble(results: List[Dict]) -> Dict[str, Any]:
     """
     Combine the model scores. Uses weights/calibration.json (from `manage.py calibrate`)
     when it exists, otherwise a plain average with the REAL_BELOW / FAKE_FROM bands.

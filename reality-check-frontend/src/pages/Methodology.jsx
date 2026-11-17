@@ -28,9 +28,10 @@ const MODEL_RESULTS = [
   { name: 'AI-vs-Human',     source: 'public checkpoint',                     auc: 65.7, acc: 64.3 },
   { name: 'OpenFake SwinV2', source: 'public checkpoint, recent generators',  auc: 82.4, acc: 75.6 },
 ];
+// Plain average of all five models; the app never labels a file REAL on its own.
 const APP_LABELS = {
-  fake: { right: 31, unsure: 70, wrong: 10 },
-  real: { right: 35, unsure: 64, wrong: 11 },
+  fake: { right: 58, unsure: 53, wrong: 0 },
+  real: { right: 0, unsure: 102, wrong: 8 },
 };
 
 export default function Methodology() {
@@ -198,7 +199,7 @@ export default function Methodology() {
           <div className="grid md:grid-cols-2 gap-6 mb-6">
             {[
               { title: 'Fake images (111)', d: APP_LABELS.fake, right: 'labelled FAKE', wrong: 'wrongly labelled REAL' },
-              { title: 'Real images (110)', d: APP_LABELS.real, right: 'labelled REAL', wrong: 'wrongly labelled FAKE' },
+              { title: 'Real images (110)', d: APP_LABELS.real, right: 'labelled REAL (never automatic)', wrong: 'wrongly labelled FAKE' },
             ].map(card => (
               <div key={card.title} className="glass rounded-2xl p-8 border border-slate-700/40">
                 <h3 className="text-lg font-bold text-white mb-5">{card.title}</h3>
@@ -214,9 +215,10 @@ export default function Methodology() {
           <div className="glass rounded-2xl p-8 border border-slate-700/40 text-sm text-slate-400 leading-relaxed space-y-3">
             <h3 className="text-xl font-bold text-white">What this means</h3>
             <p>
-              When the app gives a label on its own it is right {APP_LABELS.fake.right + APP_LABELS.real.right} times
-              out of {APP_LABELS.fake.right + APP_LABELS.fake.wrong + APP_LABELS.real.right + APP_LABELS.real.wrong}.
-              Everything else goes to an expert as UNCERTAIN, which is why the final verdict always comes from a person.
+              The AI never labels a file REAL on its own: a low score only means the detectors found
+              nothing, so the file goes to an expert. When it does say FAKE it is right
+              {APP_LABELS.fake.right} times out of {APP_LABELS.fake.right + APP_LABELS.real.wrong}.
+              Everything else goes to an expert as UNCERTAIN, and the final verdict always comes from a person.
             </p>
             <p>
               OpenFake is the strongest on fully AI-made pictures but almost never spots face swaps; Xception covers

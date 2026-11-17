@@ -406,25 +406,37 @@ def build_explanation(scan, model_name, region=None, has_heatmap=False):
         reasons.append(f'The heatmap marks the areas that pushed it towards {side}.')
 
     enabled = {name for name, _ in det.active_runners()}
-    agree, disagree = [], []
+    mine = det._verdict(prob)
+    agree, unsure, disagree = [], [], []
     for other_name, field in SCORE_FIELD.items():
         other = getattr(scan, field, None)
         if other_name == model_name or other is None or other_name not in enabled:
             continue
-        name = SHORT.get(other_name, other_name)
-        (agree if (other >= 50) == (prob >= 50) else disagree).append(f'{name} {other:.0f}%')
-    if agree and not disagree:
-        reasons.append(f'All the other models agree ({", ".join(agree)}).')
-    elif disagree and not agree:
-        reasons.append(f'None of the other models agree ({", ".join(disagree)}), '
-                       f'so treat this opinion with care.')
-    elif agree:
-        reasons.append(f'{len(agree)} other model{"s" if len(agree) > 1 else ""} agree '
-                       f'({", ".join(agree)}); {len(disagree)} disagree ({", ".join(disagree)}).')
+        theirs = det._verdict(other)
+        item = f'{SHORT.get(other_name, other_name)} {other:.0f}%'
+        if theirs == mine:
+            agree.append(item)
+        elif 'UNCERTAIN' in (theirs, mine):
+            unsure.append(item)
+        else:
+            disagree.append(item)
+    parts = []
+    if agree:
+        parts.append(f'agree: {", ".join(agree)}')
+    if unsure:
+        parts.append(f'undecided: {", ".join(unsure)}')
+    if disagree:
+        parts.append(f'say the opposite: {", ".join(disagree)}')
+    if parts:
+        reasons.append('Other models (labels: FAKE from 50%, REAL below 20%, UNCERTAIN in between) - '
+                       + '; '.join(parts) + '.')
+    if disagree:
+        reasons.append('Because some models say the opposite, treat this opinion with care.')
 
     reliability = []
     if info['accuracy'] is not None:
-        reliability.append(f'On our 221-picture test it was right {info["accuracy"]:.0f}% of the time.')
+        reliability.append(f'On our 221-picture test set (mostly DeepFakeFace images, plus 21 of our own) '
+                           f'it was right {info["accuracy"]:.0f}% of the time. Other kinds of images can give different results.')
     if info['weak']:
         reliability.append(info['weak'])
 

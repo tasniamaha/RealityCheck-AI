@@ -25,6 +25,7 @@ from django.views.decorators.csrf import csrf_exempt
 USERNAME_RE = re.compile(r'^[\w.@+-]{3,150}$')
 MAX_FAILS = 5            # wrong passwords allowed ...
 LOCK_SECONDS = 5 * 60    # ... before a 5-minute pause
+CHECKS_PER_MINUTE = 60   # live field checks per IP address
 
 
 def _json(data, status=200):
@@ -93,6 +94,12 @@ def api_auth_check(request):
     # POST, so a password being typed never ends up in a URL or the server log.
     if request.method != 'POST':
         return _json({'error': 'POST required'}, status=405)
+    # Limit how fast one address can ask whether usernames exist.
+    key = 'auth-check:' + request.META.get('REMOTE_ADDR', '')
+    count = cache.get(key, 0) + 1
+    cache.set(key, count, 60)
+    if count > CHECKS_PER_MINUTE:
+        return _json({'error': 'Too many checks. Wait a minute.'}, status=429)
     try:
         q = json.loads(request.body)
     except json.JSONDecodeError:
