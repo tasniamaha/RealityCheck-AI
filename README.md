@@ -1,12 +1,12 @@
 # Reality Check
 
-Reality Check is a deepfake and AI-image checker with a human in the loop. Five detectors score each upload. An AI label written into the file overrides them. A verified expert always gives the final verdict, and users can dispute it.
+Reality Check is a deepfake and AI-image checker with a human in the loop. Five detectors score each upload. An AI label written into the file overrides them. Clear results are decided by the AI straight away. Unsure files, and any result a user complains about, go to a verified human expert.
 
 Built by Noshin Syara, Tasnia Rahman Maha and Maliha Mehnaj.
 
 ## How it works
 
-1. **Upload.** A logged-in user uploads an image or a video (JPG, PNG, WEBP, MP4, MOV and similar formats).
+1. **Upload.** A logged-in user uploads an image or a video (JPG, PNG, WEBP, MOV and similar formats).
 2. **Detectors.** Each model gives a fake score from 0 to 100:
    - SigLIP deepfake detector (`prithivMLmods/deepfake-detector-model-v1`, public)
    - Xception (FaceForensics++ face-swap checkpoint). It scores only the face, which is found with the YuNet face detector.
@@ -14,12 +14,12 @@ Built by Noshin Syara, Tasnia Rahman Maha and Maliha Mehnaj.
    - AI-vs-Human SigLIP (`Ateeqq/ai-vs-human-image-detector`, public)
    - OpenFake SwinV2 (`bendavidsteel/openfake-swinv2-base`, public, trained on recent AI image generators)
    - Videos are scored frame by frame.
-3. **AI label.** Two models decide it, each for the job it was built for:
-   - FAKE when OpenFake scores 50% or more (AI-generated image).
-   - FAKE when Xception scores 90% or more (face swap).
-   - Otherwise UNCERTAIN, and an expert decides. The AI never labels a file REAL on its own.
+3. **Decision.** Each model decides only on the job it was built for:
+   - FAKE when OpenFake scores 50% or more (AI-generated image), or Xception scores 90% or more (face swap).
+   - REAL only when every model that scored the file is below 20%, and none failed to run.
+   - Anything in between is UNSURE and goes to an expert.
 
-   The other three models are shown with their explanations, and the average of all five is shown for reference, but they do not change the label. To use the average instead, set `ENSEMBLE_RULE = 'average'` in `deepfake_backend/settings.py`. If a model fails to load, the result page says which one.
+   The other three models are shown with their explanations, and the average of all five is shown for reference. To use the average instead, set `ENSEMBLE_RULE = 'average'` in `deepfake_backend/settings.py`. To never let the AI say REAL, set `AI_AUTO_REAL_BELOW = None`. If a model fails to load, the result page says which one.
 4. **Provenance.** If the file carries an AI label in its metadata (C2PA or IPTC "trained algorithmic media"), it is marked FAKE. The signature is not verified.
 5. **Explanations.** Each model's card says, in plain words:
    - how sure it is
@@ -29,9 +29,9 @@ Built by Noshin Syara, Tasnia Rahman Maha and Maliha Mehnaj.
    - how often it was right on our test set
 
    No language model writes these explanations. The heatmaps come from Grad-CAM for EfficientNet, gradient x activation for the SigLIP models, and blurring one patch at a time for Xception and OpenFake.
-6. **Expert verdict.** An approved expert reviews every file and decides. The models never outvote the expert. A FAKE verdict needs a written reason.
+6. **Expert review.** An approved expert reviews the unsure files. The models never outvote the expert. A FAKE verdict needs a written reason.
 7. **Learning from experts.** Once experts have marked at least 50 images fake for the same reason, and at least 50 images real, an admin can train an extra "Expert-trained" detector on their reviews, from the admin dashboard or with `python manage.py learn`. It goes live only if it does better on the test set. It never changes the AI label rule by itself: new weights are saved as `weights/calibration.proposed.json` for the team to review.
-8. **Complaints.** A user can dispute a verdict. Admins resolve or dismiss complaints.
+8. **Complaints.** A user who disagrees with any result, from the AI or an expert, can complain. The file goes back to the expert queue with the complaint and the disputed verdict, and the complaint is closed when an expert reviews it.
 
 ## Measured accuracy
 
@@ -49,7 +49,7 @@ Measured on 221 labelled images (110 real, 111 fake):
 
 AUC 50 means guessing and 100 means perfect.
 
-What the app labels on its own on this set: run `python rule_check.py` to see it. The Methodology page shows the same numbers.
+What the app decides on its own, and how many files go to an expert: run `python rule_check.py` to see it. The Methodology page shows the same numbers.
 
 Four more test sets of 100 fakes and 100 real photos each (fakes caught / real photos wrongly flagged):
 
@@ -110,7 +110,7 @@ Experts register at `/expert-register`. An admin approves them from the admin da
 | `python train_efficientnet.py` | Re-trains EfficientNet-B0 on DeepFakeFace, leaving test-set photos out |
 | `python breakdown.py` | Shows results by kind of image, from `eval_results.csv` |
 | `python summary.py` | AUC and accuracy per model and for the average, from `eval_results.csv` |
-| `python rule_check.py` | What the app labels on the test set, for the signals rule and the average |
+| `python rule_check.py` | What the app decides on its own on the test set, and how many files go to an expert |
 | `python pin_models.py` | Pins each Hugging Face model to the version you have, in `weights/hf_revisions.json` |
 
 ## Security

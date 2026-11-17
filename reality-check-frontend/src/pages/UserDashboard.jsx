@@ -306,7 +306,11 @@ export default function UserDashboard() {
       setResults(data.model_results);
       setAiSummary({ label: data.ai_label, prob: data.ensemble?.fake_prob, method: data.ensemble?.method, provenance: data.provenance, signals: data.ensemble?.signals || [], failed: data.ensemble?.models_failed || [] });
       setScanId(data.scan_id);
-      startPolling(data.scan_id);
+      if (data.status === 'REVIEWED' && data.final_verdict) {
+        setVerdict({ final_verdict: data.final_verdict, final_confidence: data.final_confidence, decided_by: data.decided_by });
+      } else {
+        startPolling(data.scan_id);
+      }
       generateVoices(data.model_results, data.scan_id);
     } catch (err) {
       setError(err.message || 'Analysis failed.');
@@ -322,6 +326,9 @@ export default function UserDashboard() {
     try {
       await submitComplaint(scanId, complaintReason, complaintDetails);
       setComplaintDone(true);
+      // The file is back with an expert now: wait for their verdict.
+      setVerdict(null);
+      startPolling(scanId);
     } catch (err) {
       setComplaintError(err.message || 'Failed to submit complaint.');
     } finally {
@@ -412,12 +419,12 @@ export default function UserDashboard() {
                 </div>
 
                 {[
-                  { icon: '', step: '01', title: 'Upload Media',           color: '#22d3ee', desc: 'Drop any image or video file into the terminal. Supported formats: JPG, PNG, MP4, MOV. Your file is sent securely to the analysis backend.' },
+                  { icon: '', step: '01', title: 'Upload Media',           color: '#22d3ee', desc: 'Drop any image or video file into the terminal. Supported formats: JPG, PNG, MOV. Your file is sent securely to the analysis backend.' },
                   { icon: '', step: '02', title: 'Preprocessing',          color: '#a855f7', desc: 'Frames are extracted and normalised. For video, key frames are sampled at regular intervals to ensure comprehensive coverage.' },
                   { icon: '', step: '03', title: 'Multi-Model AI Analysis', color: '#a855f7', desc: 'Five detection models (SigLIP, Xception, EfficientNet-B0, AI-vs-Human and OpenFake) each give the file a fake-probability score. The scores are shown separately.' },
-                  { icon: '', step: '04', title: 'Combining the models',        color: '#10b981', desc: 'The AI label is FAKE when OpenFake (AI-generated images) scores 50% or more, or Xception (face swaps) scores 90% or more. Otherwise the file is UNCERTAIN. The AI never marks a file REAL; the average of all models is shown for reference.' },
+                  { icon: '', step: '04', title: 'Combining the models',        color: '#10b981', desc: 'FAKE when OpenFake (AI-generated images) scores 50% or more or Xception (face swaps) 90% or more. REAL only when every model scores below 20%. Anything in between is UNSURE.' },
                   { icon: '', step: '05', title: 'Authenticity Score',      color: '#fbbf24', desc: 'The average gives a provisional REAL / FAKE / UNCERTAIN label, with a heatmap per model showing where it looked.' },
-                  { icon: '', step: '06', title: 'Expert Review',          color: '#f87171', desc: 'A human expert reviews the scan and makes the final decision. The AI label is provisional until then.' },
+                  { icon: '', step: '06', title: 'Expert Review',          color: '#f87171', desc: 'Clear results are decided straight away. Unsure files, and any result a user complains about, go to a human expert, who sees the complaint and the earlier verdict.' },
                 ].map((s, i) => (
                   <motion.div
                     key={i}
@@ -475,7 +482,7 @@ export default function UserDashboard() {
               <div className="absolute inset-0 bg-cyan-400/10 opacity-0 group-hover:opacity-100 transition-all" />
               <Upload className="w-16 h-16 mb-4 text-cyan-400 transition-colors" />
               <p className="text-xl mb-2 tracking-wider">DROP MEDIA HERE</p>
-              <p className="text-slate-400 text-center text-sm">Image • Video • JPG, PNG, MP4, MOV</p>
+              <p className="text-slate-400 text-center text-sm">Image • Video • JPG, PNG, MOV</p>
               <input type="file" className="hidden" onChange={handleUpload} accept="image/*,video/*" />
             </label>
 
@@ -538,6 +545,11 @@ export default function UserDashboard() {
                       <p className="text-slate-400 text-sm mt-2">
                         Confidence score: <span className="text-white font-mono">{verdict.final_confidence?.toFixed(1)}%</span>
                       </p>
+                      <p className="text-slate-400 text-sm mt-1">
+                        {verdict.decided_by === 'ai'
+                          ? 'Decided by the AI because the result was clear. Disagree? File a complaint and an expert will review it.'
+                          : 'Decided by a human expert.'}
+                      </p>
                     </>
                   ) : (
                     <div className="flex items-center gap-3">
@@ -545,7 +557,7 @@ export default function UserDashboard() {
                       <div>
                         <StatusBadge status="Awaiting Expert Review" />
                         <p className="text-slate-400 text-xs font-mono mt-2 tracking-widest">
-                          CASE #{scanId} — POLLING FOR EXPERT VERDICT...
+                          CASE #{scanId} - THE DETECTORS ARE UNSURE, AN EXPERT WILL REVIEW IT
                         </p>
                       </div>
                     </div>
@@ -555,7 +567,7 @@ export default function UserDashboard() {
                 {/* Status banner */}
                 <div className="text-center py-3 bg-amber-500/10 rounded-2xl border border-amber-500/30">
                   <p className="text-amber-400 font-mono tracking-widest text-xs">
-                    PRELIMINARY AI SCAN COMPLETE — AWAITING HUMAN OVERRIDE
+                    {verdict ? (verdict.decided_by === 'ai' ? 'CLEAR RESULT - DECIDED BY THE AI' : 'REVIEWED BY A HUMAN EXPERT') : 'UNSURE RESULT - SENT TO AN EXPERT'}
                   </p>
                 </div>
 
@@ -563,7 +575,7 @@ export default function UserDashboard() {
                 {/* AI summary */}
                 {aiSummary && (
                   <div className="glass rounded-3xl p-6 border border-slate-700/60 space-y-3">
-                    <p className="text-xs font-mono text-slate-400 tracking-widest">AI LABEL BEFORE EXPERT REVIEW</p>
+                    <p className="text-xs font-mono text-slate-400 tracking-widest">AI LABEL</p>
                     <p className={`text-3xl font-bold ${verdictColor(aiSummary.label)}`}>{aiSummary.label || '-'}</p>
                     {aiSummary.prob != null && (
                       <p className="text-slate-400 text-sm">
